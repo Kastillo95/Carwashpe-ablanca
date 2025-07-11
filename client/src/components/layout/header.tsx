@@ -2,9 +2,13 @@ import { Car, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { BUSINESS_INFO } from "@/lib/constants";
+import { PasswordModal } from "@/components/modals/password-modal";
+import { useState } from "react";
+import logoImage from "@assets/IMG_20250706_211100_1752220069225.jpg";
 
 export function Header() {
   const { isAdminMode, logout } = useAuth();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   return (
     <header className="bg-brand-blue text-white shadow-lg">
@@ -12,8 +16,12 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo Section */}
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-              <Car className="text-brand-red text-xl" />
+            <div className="w-12 h-12 bg-white rounded-full overflow-hidden">
+              <img 
+                src={logoImage} 
+                alt="Carwash Peña Blanca Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold">{BUSINESS_INFO.name.toUpperCase()}</h1>
@@ -27,7 +35,13 @@ export function Header() {
               Modo: <span className="font-medium">{isAdminMode ? "Administrador" : "Usuario"}</span>
             </span>
             <Button
-              onClick={logout}
+              onClick={() => {
+                if (isAdminMode) {
+                  logout();
+                } else {
+                  setShowPasswordModal(true);
+                }
+              }}
               className={`${
                 isAdminMode 
                   ? "bg-green-600 hover:bg-green-700" 
@@ -50,6 +64,11 @@ export function Header() {
           </div>
         </div>
       </div>
+      
+      <PasswordModal
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
     </header>
   );
 }

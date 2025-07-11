@@ -39,19 +39,80 @@ export default function Billing() {
   };
 
   const handleViewInvoice = (invoice: Invoice) => {
-    // This would typically open a detailed invoice view
-    toast({
-      title: "Ver Factura",
-      description: `Mostrando detalles de la factura ${invoice.number}`,
-    });
+    // Open invoice details in a new window
+    const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
+    if (invoiceWindow) {
+      invoiceWindow.document.write(`
+        <html>
+          <head>
+            <title>Factura ${invoice.number}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+              .invoice-info { margin: 20px 0; }
+              .amount { font-size: 18px; font-weight: bold; color: #2563eb; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>CARWASH PEÑA BLANCA</h1>
+              <h2>Factura ${invoice.number}</h2>
+            </div>
+            <div class="invoice-info">
+              <p><strong>Cliente:</strong> ${invoice.customerName}</p>
+              <p><strong>Fecha:</strong> ${formatDate(invoice.date)}</p>
+              <p><strong>Total:</strong> <span class="amount">${formatCurrency(invoice.total)}</span></p>
+              <p><strong>Estado:</strong> ${invoice.status === 'paid' ? 'Pagado' : 'Pendiente'}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      invoiceWindow.document.close();
+    }
   };
 
   const handlePrintInvoice = (invoice: Invoice) => {
-    // This would typically trigger a print dialog
-    toast({
-      title: "Imprimir Factura",
-      description: `Preparando impresión de la factura ${invoice.number}`,
-    });
+    // Create a print-friendly version
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Factura ${invoice.number}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+              .invoice-info { margin: 20px 0; }
+              .amount { font-size: 18px; font-weight: bold; }
+              @media print {
+                body { margin: 0; }
+                .no-print { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>CARWASH PEÑA BLANCA</h1>
+              <p>Peña Blanca, Cortés - WhatsApp: 94648987</p>
+              <h2>Factura ${invoice.number}</h2>
+            </div>
+            <div class="invoice-info">
+              <p><strong>Cliente:</strong> ${invoice.customerName}</p>
+              <p><strong>Fecha:</strong> ${formatDate(invoice.date)}</p>
+              <p><strong>Total:</strong> <span class="amount">${formatCurrency(invoice.total)}</span></p>
+              <p><strong>Estado:</strong> ${invoice.status === 'paid' ? 'Pagado' : 'Pendiente'}</p>
+            </div>
+            <div class="no-print">
+              <button onclick="window.print()">Imprimir</button>
+              <button onclick="window.close()">Cerrar</button>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
+    }
   };
 
   // Redirect non-admin users

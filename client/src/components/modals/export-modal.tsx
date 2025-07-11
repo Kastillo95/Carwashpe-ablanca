@@ -12,6 +12,7 @@ interface ExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   exportType: string;
+  onConfirm?: () => void;
 }
 
 export function ExportModal({ open, onOpenChange, exportType }: ExportModalProps) {

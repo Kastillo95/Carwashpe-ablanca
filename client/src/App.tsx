@@ -6,9 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { PasswordModal } from "@/components/modals/password-modal";
-import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+
 
 // Pages
 import Dashboard from "@/pages/dashboard";
@@ -20,8 +18,6 @@ import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const { isAdminMode } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,11 +36,6 @@ function AppContent() {
           </Switch>
         </main>
       </div>
-      
-      <PasswordModal
-        open={showPasswordModal}
-        onOpenChange={setShowPasswordModal}
-      />
     </div>
   );
 }
