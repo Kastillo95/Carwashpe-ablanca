@@ -222,7 +222,7 @@ export default function Billing() {
                 <tbody>
                   {invoices?.map((invoice) => (
                     <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 font-medium">{invoice.invoiceNumber}</td>
+                      <td className="py-3 font-medium">{(invoice as any).number || (invoice as any).invoiceNumber}</td>
                       <td className="py-3">{invoice.customerName}</td>
                       <td className="py-3">{formatDate(invoice.date)}</td>
                       <td className="py-3">{formatCurrency(parseFloat(invoice.total))}</td>
@@ -276,7 +276,7 @@ export default function Billing() {
                         printWindow.document.write(`
                           <html>
                             <head>
-                              <title>Factura ${selectedInvoice.invoice.invoiceNumber}</title>
+                              <title>Factura ${(selectedInvoice.invoice as any).number || (selectedInvoice.invoice as any).invoiceNumber}</title>
                               <style>
                                 body { margin: 0; padding: 0; }
                                 .thermal-receipt { margin: 0 auto; }

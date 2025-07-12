@@ -246,13 +246,14 @@ export function QuickInvoiceForm() {
   };
 
   const handlePrintReceipt = () => {
-    if (receiptRef.current && lastCreatedInvoice) {
+    if (receiptRef.current && lastCreatedInvoice?.invoice) {
       const printWindow = window.open('', '_blank', 'width=400,height=600');
       if (printWindow) {
+        const invoiceNumber = (lastCreatedInvoice.invoice as any).number || (lastCreatedInvoice.invoice as any).invoiceNumber || 'N/A';
         printWindow.document.write(`
           <html>
             <head>
-              <title>Factura ${lastCreatedInvoice.invoice.invoiceNumber}</title>
+              <title>Factura ${invoiceNumber}</title>
               <style>
                 body { margin: 0; padding: 0; }
                 .thermal-receipt { margin: 0 auto; }
@@ -513,12 +514,12 @@ export function QuickInvoiceForm() {
               Vista Previa de Factura
             </DialogTitle>
           </DialogHeader>
-          {lastCreatedInvoice && (
+          {lastCreatedInvoice?.invoice && (
             <div className="space-y-4">
               <ThermalReceipt
                 ref={receiptRef}
                 invoice={lastCreatedInvoice.invoice}
-                items={lastCreatedInvoice.items}
+                items={lastCreatedInvoice.items || []}
               />
               <div className="flex gap-2 no-print">
                 <Button

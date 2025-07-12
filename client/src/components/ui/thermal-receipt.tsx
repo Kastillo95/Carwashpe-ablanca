@@ -4,13 +4,18 @@ import { BUSINESS_INFO } from "@/lib/constants";
 import type { Invoice, InvoiceItem } from "@shared/schema";
 
 interface ThermalReceiptProps {
-  invoice: Invoice;
-  items: InvoiceItem[];
+  invoice: Invoice | null;
+  items: InvoiceItem[] | null;
 }
 
 export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
   ({ invoice, items }, ref) => {
-    const subtotal = (items || []).reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    if (!invoice) {
+      return <div>Cargando factura...</div>;
+    }
+    
+    const invoiceItems = items || [];
+    const subtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const tax = subtotal * 0.15;
     const total = subtotal + tax;
 
@@ -44,15 +49,15 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         <div className="mb-3">
           <div className="flex justify-between">
             <span>Factura #:</span>
-            <span className="font-bold">{invoice.invoiceNumber}</span>
+            <span className="font-bold">{(invoice as any)?.number || (invoice as any)?.invoiceNumber || 'N/A'}</span>
           </div>
           <div className="flex justify-between">
             <span>Fecha:</span>
-            <span>{formatDate(invoice.date)}</span>
+            <span>{invoice?.date ? formatDate(invoice.date) : new Date().toLocaleDateString('es-HN')}</span>
           </div>
           <div className="flex justify-between">
             <span>Hora:</span>
-            <span>{new Date(invoice.createdAt || new Date()).toLocaleTimeString('es-HN', { 
+            <span>{new Date(invoice?.createdAt || new Date()).toLocaleTimeString('es-HN', { 
               hour: '2-digit', 
               minute: '2-digit',
               hour12: true 
@@ -60,9 +65,9 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
           </div>
           <div className="flex justify-between">
             <span>Cliente:</span>
-            <span className="font-semibold">{invoice.customerName}</span>
+            <span className="font-semibold">{invoice?.customerName || 'Cliente'}</span>
           </div>
-          {invoice.customerPhone && (
+          {invoice?.customerPhone && (
             <div className="flex justify-between">
               <span>Teléfono:</span>
               <span>{invoice.customerPhone}</span>
@@ -76,7 +81,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         {/* Items */}
         <div className="mb-3">
           <div className="font-bold mb-1">DETALLE DE SERVICIOS</div>
-          {(items || []).map((item, index) => (
+          {invoiceItems.map((item, index) => (
             <div key={index} className="mb-2">
               <div className="flex justify-between">
                 <span className="flex-1 pr-1">{item.serviceName}</span>
