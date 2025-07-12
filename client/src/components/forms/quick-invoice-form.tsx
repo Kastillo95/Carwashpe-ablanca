@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ShoppingCart, User, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, ShoppingCart, User, Plus, Trash2, Eye, Printer } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
-import { type Inventory } from "@shared/schema";
+import { ThermalReceipt } from "@/components/ui/thermal-receipt";
+import { type Inventory, type Invoice, type InvoiceItem } from "@shared/schema";
 import { getTodayDate, formatCurrency, calculateInvoiceTotals } from "@/lib/utils";
 
 const quickInvoiceSchema = z.object({
@@ -41,6 +43,9 @@ export function QuickInvoiceForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showManualAdd, setShowManualAdd] = useState(false);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [lastCreatedInvoice, setLastCreatedInvoice] = useState<{ invoice: Invoice; items: InvoiceItem[] } | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: inventory } = useQuery<Inventory[]>({
@@ -190,7 +195,6 @@ export function QuickInvoiceForm() {
     setIsLoading(true);
 
     try {
-      const now = new Date();
       const invoiceData = {
         customer: {
           name: form.getValues("customerName"),
@@ -209,7 +213,11 @@ export function QuickInvoiceForm() {
         date: getTodayDate(),
       };
 
-      await apiRequest("POST", "/api/invoices", invoiceData);
+      const result = await apiRequest("POST", "/api/invoices", invoiceData);
+      
+      // Set the created invoice for preview
+      setLastCreatedInvoice(result);
+      setShowInvoicePreview(true);
       
       toast({
         title: "Factura creada",
@@ -234,6 +242,39 @@ export function QuickInvoiceForm() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    if (receiptRef.current && lastCreatedInvoice) {
+      const printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Factura ${lastCreatedInvoice.invoice.invoiceNumber}</title>
+              <style>
+                body { margin: 0; padding: 0; }
+                .thermal-receipt { margin: 0 auto; }
+                @media print {
+                  body { margin: 0; }
+                  .no-print { display: none; }
+                }
+              </style>
+            </head>
+            <body>
+              ${receiptRef.current.innerHTML}
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.close();
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     }
   };
 
@@ -462,6 +503,43 @@ export function QuickInvoiceForm() {
           {isLoading ? "Generando..." : `Generar Factura - ${formatCurrency(totals.total)}`}
         </Button>
       )}
+
+      {/* Invoice Preview Dialog */}
+      <Dialog open={showInvoicePreview} onOpenChange={setShowInvoicePreview}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Vista Previa de Factura
+            </DialogTitle>
+          </DialogHeader>
+          {lastCreatedInvoice && (
+            <div className="space-y-4">
+              <ThermalReceipt
+                ref={receiptRef}
+                invoice={lastCreatedInvoice.invoice}
+                items={lastCreatedInvoice.items}
+              />
+              <div className="flex gap-2 no-print">
+                <Button
+                  onClick={handlePrintReceipt}
+                  className="flex-1 bg-brand-blue hover:bg-blue-800"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir Factura
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowInvoicePreview(false)}
+                  className="flex-1"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

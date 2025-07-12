@@ -10,14 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### December 12, 2024 - Quick Billing System Implementation
-- **Facturación Rápida para Empleados**: Sistema optimizado para facturación con código de barras
-- **Separación de Roles**: Empleados acceden solo a Dashboard, Facturación Rápida y Contacto; Administradores tienen acceso completo
-- **Inventario con Códigos de Barras**: Agregado campo barcode único a productos con datos de muestra (001-005)
-- **Reducción Automática de Stock**: Al crear facturas se reduce automáticamente el inventario
-- **Interfaz Simplificada**: Formulario rápido que solo requiere nombre del cliente, fecha/hora automática
-- **Base de Datos PostgreSQL**: Migrado de almacenamiento en memoria a PostgreSQL para persistencia de datos
-- **DatabaseStorage**: Implementada clase DatabaseStorage con transacciones para operaciones críticas como facturación
+### July 12, 2025 - Replit Migration and Thermal Receipt System
+- **Migración Completa a Replit**: Sistema migrado exitosamente de Replit Agent a ambiente estándar de Replit
+- **Sistema de Facturación Térmica**: Implementado diseño profesional de recibos térmicos con logo empresarial
+- **Vista Previa de Facturas**: Usuarios normales pueden crear facturas con vista previa e impresión
+- **Corrección de Errores NaN**: Solucionados problemas de cálculos en totales de facturas
+- **Datos de Muestra**: Base de datos poblada con servicios y productos de ejemplo
+- **Permisos de Usuario**: Empleados pueden crear facturas sin restricciones de administrador
+- **Impresión Optimizada**: Sistema de impresión térmica con formato profesional de 80mm
 
 ## System Architecture
 
