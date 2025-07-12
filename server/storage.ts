@@ -1,8 +1,11 @@
 import { 
   Service, Customer, Appointment, Inventory, Invoice, InvoiceItem,
   InsertService, InsertCustomer, InsertAppointment, InsertInventory, 
-  InsertInvoice, InsertInvoiceItem, CreateInvoiceData, DashboardStats, ReportData
+  InsertInvoice, InsertInvoiceItem, CreateInvoiceData, DashboardStats, ReportData,
+  services, customers, appointments, inventory, invoices, invoiceItems
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Services
@@ -395,4 +398,291 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  // Services
+  async getServices(): Promise<Service[]> {
+    const result = await db.select().from(services).where(eq(services.active, true));
+    return result;
+  }
+
+  async getService(id: number): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service || undefined;
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    const [newService] = await db.insert(services).values(service).returning();
+    return newService;
+  }
+
+  async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
+    const [updated] = await db.update(services).set(service).where(eq(services.id, id)).returning();
+    if (!updated) throw new Error("Service not found");
+    return updated;
+  }
+
+  async deleteService(id: number): Promise<void> {
+    await db.delete(services).where(eq(services.id, id));
+  }
+
+  // Customers
+  async getCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers);
+  }
+
+  async getCustomer(id: number): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer || undefined;
+  }
+
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const [newCustomer] = await db.insert(customers).values(customer).returning();
+    return newCustomer;
+  }
+
+  async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
+    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
+    if (!updated) throw new Error("Customer not found");
+    return updated;
+  }
+
+  // Appointments
+  async getAppointments(): Promise<Appointment[]> {
+    return await db.select().from(appointments);
+  }
+
+  async getAppointment(id: number): Promise<Appointment | undefined> {
+    const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
+    return appointment || undefined;
+  }
+
+  async getAppointmentsByDate(date: string): Promise<Appointment[]> {
+    return await db.select().from(appointments).where(eq(appointments.date, date));
+  }
+
+  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
+    const [newAppointment] = await db.insert(appointments).values(appointment).returning();
+    return newAppointment;
+  }
+
+  async updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment> {
+    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
+    if (!updated) throw new Error("Appointment not found");
+    return updated;
+  }
+
+  async deleteAppointment(id: number): Promise<void> {
+    await db.delete(appointments).where(eq(appointments.id, id));
+  }
+
+  // Inventory
+  async getInventory(): Promise<Inventory[]> {
+    return await db.select().from(inventory).where(eq(inventory.active, true));
+  }
+
+  async getInventoryItem(id: number): Promise<Inventory | undefined> {
+    const [item] = await db.select().from(inventory).where(eq(inventory.id, id));
+    return item || undefined;
+  }
+
+  async getInventoryItemByBarcode(barcode: string): Promise<Inventory | undefined> {
+    const [item] = await db.select().from(inventory).where(and(
+      eq(inventory.barcode, barcode),
+      eq(inventory.active, true)
+    ));
+    return item || undefined;
+  }
+
+  async createInventoryItem(item: InsertInventory): Promise<Inventory> {
+    const [newItem] = await db.insert(inventory).values(item).returning();
+    return newItem;
+  }
+
+  async updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory> {
+    const [updated] = await db.update(inventory).set(item).where(eq(inventory.id, id)).returning();
+    if (!updated) throw new Error("Inventory item not found");
+    return updated;
+  }
+
+  async deleteInventoryItem(id: number): Promise<void> {
+    await db.delete(inventory).where(eq(inventory.id, id));
+  }
+
+  async reduceStock(id: number, quantity: number): Promise<Inventory> {
+    const [item] = await db.select().from(inventory).where(eq(inventory.id, id));
+    if (!item) throw new Error("Inventory item not found");
+    
+    if (item.quantity < quantity) {
+      throw new Error("Insufficient stock");
+    }
+    
+    const [updated] = await db.update(inventory)
+      .set({ quantity: item.quantity - quantity })
+      .where(eq(inventory.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  // Invoices
+  async getInvoices(): Promise<Invoice[]> {
+    return await db.select().from(invoices);
+  }
+
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice || undefined;
+  }
+
+  async getInvoiceWithItems(id: number): Promise<{ invoice: Invoice; items: InvoiceItem[] } | undefined> {
+    const invoice = await this.getInvoice(id);
+    if (!invoice) return undefined;
+    
+    const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+    return { invoice, items };
+  }
+
+  async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
+    return await db.transaction(async (tx) => {
+      // Reduce inventory stock if provided
+      if (data.inventoryItems) {
+        for (const inventoryItem of data.inventoryItems) {
+          const [item] = await tx.select().from(inventory).where(eq(inventory.id, inventoryItem.id));
+          if (!item) throw new Error("Inventory item not found");
+          
+          if (item.quantity < inventoryItem.quantity) {
+            throw new Error("Insufficient stock");
+          }
+          
+          await tx.update(inventory)
+            .set({ quantity: item.quantity - inventoryItem.quantity })
+            .where(eq(inventory.id, inventoryItem.id));
+        }
+      }
+
+      // Get next invoice number
+      const invoiceNumber = await this.getNextInvoiceNumber();
+      
+      // Calculate totals
+      const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+      const tax = subtotal * 0.15; // 15% ISV
+      const total = subtotal + tax;
+      
+      // Create invoice
+      const [invoice] = await tx.insert(invoices).values({
+        number: invoiceNumber,
+        customerName: data.customer.name,
+        customerPhone: data.customer.phone || null,
+        customerTaxId: data.customer.taxId || null,
+        subtotal: subtotal.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2),
+        status: "pending",
+        date: data.date,
+      }).returning();
+      
+      // Create invoice items
+      const itemsData = data.items.map(item => ({
+        invoiceId: invoice.id,
+        serviceName: item.serviceName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice.toFixed(2),
+        total: (item.quantity * item.unitPrice).toFixed(2),
+      }));
+      
+      const items = await tx.insert(invoiceItems).values(itemsData).returning();
+      
+      return { invoice, items };
+    });
+  }
+
+  async updateInvoiceStatus(id: number, status: string): Promise<Invoice> {
+    const [updated] = await db.update(invoices).set({ status }).where(eq(invoices.id, id)).returning();
+    if (!updated) throw new Error("Invoice not found");
+    return updated;
+  }
+
+  async getNextInvoiceNumber(): Promise<string> {
+    const [result] = await db.select({ maxId: sql<number>`MAX(${invoices.id})` }).from(invoices);
+    const nextNumber = (result?.maxId || 0) + 1;
+    return `001-${String(nextNumber).padStart(4, '0')}`;
+  }
+
+  // Reports
+  async getDashboardStats(): Promise<DashboardStats> {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const [todayAppointmentsResult] = await db.select({ 
+      count: sql<number>`COUNT(*)` 
+    }).from(appointments).where(eq(appointments.date, today));
+    
+    const [dailyRevenueResult] = await db.select({ 
+      revenue: sql<number>`COALESCE(SUM(CAST(${invoices.total} AS DECIMAL)), 0)` 
+    }).from(invoices).where(eq(invoices.date, today));
+    
+    const [lowStockResult] = await db.select({ 
+      count: sql<number>`COUNT(*)` 
+    }).from(inventory).where(and(
+      sql`${inventory.quantity} <= ${inventory.minQuantity}`,
+      eq(inventory.active, true)
+    ));
+    
+    const [customersResult] = await db.select({ 
+      count: sql<number>`COUNT(DISTINCT ${invoices.customerName})` 
+    }).from(invoices);
+    
+    return {
+      todayAppointments: todayAppointmentsResult?.count || 0,
+      dailyRevenue: dailyRevenueResult?.revenue || 0,
+      lowStockItems: lowStockResult?.count || 0,
+      servedCustomers: customersResult?.count || 0,
+    };
+  }
+
+  async getReportData(startDate: string, endDate: string): Promise<ReportData> {
+    const [revenueResult] = await db.select({ 
+      revenue: sql<number>`COALESCE(SUM(CAST(${invoices.total} AS DECIMAL)), 0)` 
+    }).from(invoices).where(and(
+      gte(invoices.date, startDate),
+      lte(invoices.date, endDate)
+    ));
+    
+    const [servicesResult] = await db.select({ 
+      count: sql<number>`COUNT(*)` 
+    }).from(invoiceItems).where(and(
+      gte(invoices.date, startDate),
+      lte(invoices.date, endDate)
+    ));
+    
+    const [customersResult] = await db.select({ 
+      count: sql<number>`COUNT(DISTINCT ${invoices.customerName})` 
+    }).from(invoices).where(and(
+      gte(invoices.date, startDate),
+      lte(invoices.date, endDate)
+    ));
+    
+    const [topServiceResult] = await db.select({ 
+      serviceName: invoiceItems.serviceName,
+      count: sql<number>`COUNT(*)` 
+    }).from(invoiceItems)
+      .innerJoin(invoices, eq(invoiceItems.invoiceId, invoices.id))
+      .where(and(
+        gte(invoices.date, startDate),
+        lte(invoices.date, endDate)
+      ))
+      .groupBy(invoiceItems.serviceName)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(1);
+    
+    return {
+      totalRevenue: revenueResult?.revenue || 0,
+      totalServices: servicesResult?.count || 0,
+      totalCustomers: customersResult?.count || 0,
+      topService: topServiceResult?.serviceName || "N/A",
+      period: `${startDate} - ${endDate}`,
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();

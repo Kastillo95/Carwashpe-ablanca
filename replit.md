@@ -16,6 +16,8 @@ Preferred communication style: Simple, everyday language.
 - **Inventario con Códigos de Barras**: Agregado campo barcode único a productos con datos de muestra (001-005)
 - **Reducción Automática de Stock**: Al crear facturas se reduce automáticamente el inventario
 - **Interfaz Simplificada**: Formulario rápido que solo requiere nombre del cliente, fecha/hora automática
+- **Base de Datos PostgreSQL**: Migrado de almacenamiento en memoria a PostgreSQL para persistencia de datos
+- **DatabaseStorage**: Implementada clase DatabaseStorage con transacciones para operaciones críticas como facturación
 
 ## System Architecture
 

@@ -5,8 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
-  return `L. ${amount.toFixed(2)}`;
+export function formatCurrency(amount: number | string): string {
+  const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return `L. ${numericAmount.toFixed(2)}`;
 }
 
 export function formatDate(date: string): string {

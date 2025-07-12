@@ -86,7 +86,7 @@ export function QuickInvoiceForm() {
         return [...prevCart, {
           id: product.id,
           name: product.name,
-          price: parseFloat(product.price),
+          price: parseFloat(String(product.price)),
           quantity: 1,
           barcode: product.barcode || "",
         }];
