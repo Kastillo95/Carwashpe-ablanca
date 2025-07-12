@@ -189,10 +189,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Contraseña incorrecta" });
       }
       
+      // Generar código automático si es un servicio y no tiene barcode
+      if (itemData.isService && !itemData.barcode) {
+        const nextServiceNumber = await storage.getNextServiceNumber();
+        itemData.barcode = nextServiceNumber.toString().padStart(4, '0');
+      }
+      
       const validatedData = insertInventorySchema.parse(itemData);
       const item = await storage.createInventoryItem(validatedData);
       res.json(item);
     } catch (error) {
+      console.error("Error creating inventory item:", error);
       res.status(400).json({ message: error instanceof Error ? error.message : "Error al crear producto" });
     }
   });

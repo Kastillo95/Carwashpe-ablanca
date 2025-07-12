@@ -80,10 +80,15 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   serviceId: true,
   createdAt: true 
 });
-export const insertInventorySchema = createInsertSchema(inventory).omit({ id: true }).extend({
-  quantity: z.number().min(0).optional(),
-  minQuantity: z.number().min(0).optional(),
-  barcode: z.string().min(1, "Código de barras requerido"),
+export const insertInventorySchema = createInsertSchema(inventory).omit({ id: true, barcode: true }).extend({
+  quantity: z.number().min(0).optional().nullable(),
+  minQuantity: z.number().min(0).optional().nullable(),
+  barcode: z.string().nullable().optional(), // Se genera automáticamente si no se proporciona
+  isService: z.boolean().optional(),
+  description: z.string().nullable().optional(),
+  supplier: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  price: z.union([z.string(), z.number()]).transform(val => String(val)), // Acepta número o string
 });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ 
   id: true, 

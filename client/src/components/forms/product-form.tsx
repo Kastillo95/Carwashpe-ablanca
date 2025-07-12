@@ -17,7 +17,7 @@ import { Inventory } from "@shared/schema";
 const productSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   description: z.string().optional(),
-  barcode: z.string().min(1, "El código de barras es requerido"),
+  barcode: z.string().optional(), // Opcional para servicios que se auto-generan
   quantity: z.number().min(0).optional(),
   minQuantity: z.number().min(0).optional(),
   price: z.number().min(0.01, "El precio debe ser mayor a 0"),
@@ -122,10 +122,10 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="barcode">Código de Barras</Label>
+              <Label htmlFor="barcode">Código de Barras {isService && "(Se genera automáticamente si se deja vacío)"}</Label>
               <Input
                 id="barcode"
-                placeholder={isService ? "LAV001" : "001"}
+                placeholder={isService ? "Se generará automáticamente: 0001, 0002..." : "001"}
                 {...form.register("barcode")}
                 disabled={isLoading}
               />

@@ -49,10 +49,16 @@ export interface IStorage {
   // Reports
   getDashboardStats(): Promise<DashboardStats>;
   getReportData(startDate: string, endDate: string): Promise<ReportData>;
+
+  // Helper methods
+  getNextServiceNumber(): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
   // DEPRECATED: Esta clase ya no se usa, se mantiene solo para compatibilidad
+  async getNextServiceNumber(): Promise<number> {
+    return 1; // Placeholder para compatibilidad
+  }
   private services: Map<number, Service> = new Map();
   private customers: Map<number, Customer> = new Map();
   private appointments: Map<number, Appointment> = new Map();
@@ -608,6 +614,13 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ maxId: sql<number>`MAX(${invoices.id})` }).from(invoices);
     const nextNumber = (result?.maxId || 0) + 1;
     return `001-${String(nextNumber).padStart(4, '0')}`;
+  }
+
+  async getNextServiceNumber(): Promise<number> {
+    const [result] = await db.select({ 
+      count: sql<number>`COUNT(*)` 
+    }).from(inventory).where(eq(inventory.isService, true));
+    return (result?.count || 0) + 1;
   }
 
   // Reports
