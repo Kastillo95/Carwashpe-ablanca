@@ -259,15 +259,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", async (req, res) => {
     try {
-      const { password, ...invoiceData } = req.body;
-      if (password !== ADMIN_PASSWORD) {
-        return res.status(401).json({ message: "Contraseña incorrecta" });
-      }
-      
-      const validatedData = createInvoiceSchema.parse(invoiceData);
-      const result = await storage.createInvoice(validatedData);
+      // Remove password validation for quick invoicing (users can create invoices)
+      const result = await storage.createInvoice(req.body);
       res.json(result);
     } catch (error) {
+      console.error("Error creating invoice:", error);
       res.status(400).json({ message: error instanceof Error ? error.message : "Error al crear factura" });
     }
   });

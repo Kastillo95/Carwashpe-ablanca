@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InvoiceForm } from "@/components/forms/invoice-form";
+import { ThermalReceipt } from "@/components/ui/thermal-receipt";
 import { 
   FileText, 
   Eye, 
@@ -13,12 +15,16 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Invoice } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { Invoice, InvoiceItem } from "@shared/schema";
 
 export default function Billing() {
   const { isAdminMode } = useAuth();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<{ invoice: Invoice; items: InvoiceItem[] } | null>(null);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -38,80 +44,65 @@ export default function Billing() {
     }
   };
 
-  const handleViewInvoice = (invoice: Invoice) => {
-    // Open invoice details in a new window
-    const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
-    if (invoiceWindow) {
-      invoiceWindow.document.write(`
-        <html>
-          <head>
-            <title>Factura ${invoice.number}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .invoice-info { margin: 20px 0; }
-              .amount { font-size: 18px; font-weight: bold; color: #2563eb; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>CARWASH PEÑA BLANCA</h1>
-              <h2>Factura ${invoice.number}</h2>
-            </div>
-            <div class="invoice-info">
-              <p><strong>Cliente:</strong> ${invoice.customerName}</p>
-              <p><strong>Fecha:</strong> ${formatDate(invoice.date)}</p>
-              <p><strong>Total:</strong> <span class="amount">${formatCurrency(invoice.total)}</span></p>
-              <p><strong>Estado:</strong> ${invoice.status === 'paid' ? 'Pagado' : 'Pendiente'}</p>
-            </div>
-          </body>
-        </html>
-      `);
-      invoiceWindow.document.close();
+  const handleViewInvoice = async (invoice: Invoice) => {
+    try {
+      const invoiceWithItems = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      setSelectedInvoice(invoiceWithItems);
+      setShowReceiptDialog(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cargar los detalles de la factura",
+        variant: "destructive",
+      });
     }
   };
 
-  const handlePrintInvoice = (invoice: Invoice) => {
-    // Create a print-friendly version
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Factura ${invoice.number}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .invoice-info { margin: 20px 0; }
-              .amount { font-size: 18px; font-weight: bold; }
-              @media print {
-                body { margin: 0; }
-                .no-print { display: none; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>CARWASH PEÑA BLANCA</h1>
-              <p>Peña Blanca, Cortés - WhatsApp: 94648987</p>
-              <h2>Factura ${invoice.number}</h2>
-            </div>
-            <div class="invoice-info">
-              <p><strong>Cliente:</strong> ${invoice.customerName}</p>
-              <p><strong>Fecha:</strong> ${formatDate(invoice.date)}</p>
-              <p><strong>Total:</strong> <span class="amount">${formatCurrency(invoice.total)}</span></p>
-              <p><strong>Estado:</strong> ${invoice.status === 'paid' ? 'Pagado' : 'Pendiente'}</p>
-            </div>
-            <div class="no-print">
-              <button onclick="window.print()">Imprimir</button>
-              <button onclick="window.close()">Cerrar</button>
-            </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 500);
+  const handlePrintInvoice = async (invoice: Invoice) => {
+    try {
+      const invoiceWithItems = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      setSelectedInvoice(invoiceWithItems);
+      setShowReceiptDialog(true);
+      
+      // Small delay to ensure the dialog is rendered
+      setTimeout(() => {
+        if (receiptRef.current) {
+          const printWindow = window.open('', '_blank', 'width=400,height=600');
+          if (printWindow) {
+            printWindow.document.write(`
+              <html>
+                <head>
+                  <title>Factura ${invoice.invoiceNumber}</title>
+                  <style>
+                    body { margin: 0; padding: 0; }
+                    .thermal-receipt { margin: 0 auto; }
+                    @media print {
+                      body { margin: 0; }
+                      .no-print { display: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  ${receiptRef.current.innerHTML}
+                  <script>
+                    window.onload = function() {
+                      window.print();
+                      window.close();
+                    };
+                  </script>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          }
+        }
+      }, 500);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo imprimir la factura",
+        variant: "destructive",
+      });
     }
   };
 
@@ -231,7 +222,7 @@ export default function Billing() {
                 <tbody>
                   {invoices?.map((invoice) => (
                     <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 font-medium">{invoice.number}</td>
+                      <td className="py-3 font-medium">{invoice.invoiceNumber}</td>
                       <td className="py-3">{invoice.customerName}</td>
                       <td className="py-3">{formatDate(invoice.date)}</td>
                       <td className="py-3">{formatCurrency(parseFloat(invoice.total))}</td>
@@ -262,6 +253,71 @@ export default function Billing() {
           )}
         </CardContent>
       </Card>
+
+      {/* Thermal Receipt Dialog */}
+      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vista Previa de Factura</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <ThermalReceipt
+                ref={receiptRef}
+                invoice={selectedInvoice.invoice}
+                items={selectedInvoice.items}
+              />
+              <div className="flex gap-2 no-print">
+                <Button
+                  onClick={() => {
+                    if (receiptRef.current) {
+                      const printWindow = window.open('', '_blank', 'width=400,height=600');
+                      if (printWindow) {
+                        printWindow.document.write(`
+                          <html>
+                            <head>
+                              <title>Factura ${selectedInvoice.invoice.invoiceNumber}</title>
+                              <style>
+                                body { margin: 0; padding: 0; }
+                                .thermal-receipt { margin: 0 auto; }
+                                @media print {
+                                  body { margin: 0; }
+                                  .no-print { display: none; }
+                                }
+                              </style>
+                            </head>
+                            <body>
+                              ${receiptRef.current.innerHTML}
+                              <script>
+                                window.onload = function() {
+                                  window.print();
+                                  window.close();
+                                };
+                              </script>
+                            </body>
+                          </html>
+                        `);
+                        printWindow.document.close();
+                      }
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReceiptDialog(false)}
+                  className="flex-1"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

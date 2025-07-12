@@ -7,6 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number | string): string {
   const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numericAmount)) {
+    return "L. 0.00";
+  }
   return `L. ${numericAmount.toFixed(2)}`;
 }
 
@@ -30,15 +33,20 @@ export function getTodayDate(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function calculateInvoiceTotals(items: Array<{quantity: number, unitPrice: number}>) {
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+export function calculateInvoiceTotals(items: Array<{quantity: number, price?: number, unitPrice?: number}>) {
+  const subtotal = items.reduce((sum, item) => {
+    const price = item.price || item.unitPrice || 0;
+    const quantity = item.quantity || 0;
+    return sum + (quantity * price);
+  }, 0);
+  
   const tax = subtotal * 0.15;
   const total = subtotal + tax;
   
   return {
-    subtotal,
-    tax,
-    total
+    subtotal: isNaN(subtotal) ? 0 : subtotal,
+    tax: isNaN(tax) ? 0 : tax,
+    total: isNaN(total) ? 0 : total
   };
 }
 
