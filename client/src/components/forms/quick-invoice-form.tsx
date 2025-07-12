@@ -255,11 +255,37 @@ export function QuickInvoiceForm() {
             <head>
               <title>Factura ${invoiceNumber}</title>
               <style>
-                body { margin: 0; padding: 0; }
-                .thermal-receipt { margin: 0 auto; }
+                body { 
+                  margin: 0; 
+                  padding: 20px; 
+                  font-family: 'Courier New', monospace;
+                  font-size: 12px;
+                  line-height: 1.2;
+                  background: white;
+                  color: black;
+                }
+                .thermal-receipt { 
+                  width: 80mm; 
+                  margin: 0 auto; 
+                  background: white;
+                  color: black;
+                }
+                .no-print {
+                  display: none !important;
+                }
                 @media print {
-                  body { margin: 0; }
-                  .no-print { display: none; }
+                  body { 
+                    margin: 0; 
+                    padding: 0; 
+                  }
+                  .thermal-receipt {
+                    width: 100%;
+                    margin: 0;
+                  }
+                }
+                @page {
+                  size: 80mm auto;
+                  margin: 0;
                 }
               </style>
             </head>
@@ -267,15 +293,23 @@ export function QuickInvoiceForm() {
               ${receiptRef.current.innerHTML}
               <script>
                 window.onload = function() {
-                  window.print();
-                  window.close();
+                  setTimeout(() => {
+                    window.print();
+                    setTimeout(() => {
+                      window.close();
+                    }, 1000);
+                  }, 500);
                 };
               </script>
             </body>
           </html>
         `);
         printWindow.document.close();
+      } else {
+        alert('No se pudo abrir la ventana de impresión. Por favor, permite ventanas emergentes y vuelve a intentar.');
       }
+    } else {
+      alert('No hay factura para imprimir.');
     }
   };
 
@@ -527,7 +561,8 @@ export function QuickInvoiceForm() {
               <div className="flex gap-2 no-print">
                 <Button
                   onClick={handlePrintReceipt}
-                  className="flex-1 bg-brand-blue hover:bg-blue-800"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!lastCreatedInvoice?.invoice}
                 >
                   <Printer className="w-4 h-4 mr-2" />
                   Imprimir Factura

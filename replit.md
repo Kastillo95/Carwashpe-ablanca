@@ -18,6 +18,10 @@ Preferred communication style: Simple, everyday language.
 - **Datos de Muestra**: Base de datos poblada con servicios y productos de ejemplo
 - **Permisos de Usuario**: Empleados pueden crear facturas sin restricciones de administrador
 - **Impresión Optimizada**: Sistema de impresión térmica con formato profesional de 80mm
+- **Corrección Stock Validation**: Servicios ya no requieren validación de inventario
+- **API Invoice Fix**: Corregido problema de respuesta vacía en vista previa de facturas
+- **React Error Fix**: Solucionado error de renderizado de objeto BUSINESS_INFO.hours
+- **Print Enhancement**: Mejorado sistema de impresión para usuarios normales con mejor manejo de errores
 
 ## System Architecture
 
