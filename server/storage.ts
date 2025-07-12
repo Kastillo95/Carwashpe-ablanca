@@ -520,12 +520,17 @@ export class DatabaseStorage implements IStorage {
     const [item] = await db.select().from(inventory).where(eq(inventory.id, id));
     if (!item) throw new Error("Inventory item not found");
     
-    if (item.quantity < quantity) {
-      throw new Error("Insufficient stock");
+    // Skip stock reduction for services
+    if (item.isService) {
+      return item;
+    }
+    
+    if ((item.quantity || 0) < quantity) {
+      throw new Error(`Stock insuficiente para ${item.name}`);
     }
     
     const [updated] = await db.update(inventory)
-      .set({ quantity: item.quantity - quantity })
+      .set({ quantity: (item.quantity || 0) - quantity })
       .where(eq(inventory.id, id))
       .returning();
     
@@ -552,19 +557,22 @@ export class DatabaseStorage implements IStorage {
 
   async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
     return await db.transaction(async (tx) => {
-      // Reduce inventory stock if provided
+      // Reduce inventory stock if provided (only for physical products, not services)
       if (data.inventoryItems) {
         for (const inventoryItem of data.inventoryItems) {
           const [item] = await tx.select().from(inventory).where(eq(inventory.id, inventoryItem.id));
           if (!item) throw new Error("Inventory item not found");
           
-          if (item.quantity < inventoryItem.quantity) {
-            throw new Error("Insufficient stock");
+          // Only check and reduce stock for physical products (not services)
+          if (!item.isService) {
+            if ((item.quantity || 0) < inventoryItem.quantity) {
+              throw new Error(`Stock insuficiente para ${item.name}`);
+            }
+            
+            await tx.update(inventory)
+              .set({ quantity: (item.quantity || 0) - inventoryItem.quantity })
+              .where(eq(inventory.id, inventoryItem.id));
           }
-          
-          await tx.update(inventory)
-            .set({ quantity: item.quantity - inventoryItem.quantity })
-            .where(eq(inventory.id, inventoryItem.id));
         }
       }
 
