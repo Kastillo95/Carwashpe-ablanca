@@ -46,10 +46,12 @@ export default function Billing() {
 
   const handleViewInvoice = async (invoice: Invoice) => {
     try {
-      const invoiceWithItems = await apiRequest("GET", `/api/invoices/${invoice.id}`);
-      setSelectedInvoice(invoiceWithItems);
+      const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      console.log("Invoice response:", response);
+      setSelectedInvoice(response);
       setShowReceiptDialog(true);
     } catch (error) {
+      console.error("Error fetching invoice details:", error);
       toast({
         title: "Error",
         description: "No se pudo cargar los detalles de la factura",
@@ -69,10 +71,11 @@ export default function Billing() {
         if (receiptRef.current) {
           const printWindow = window.open('', '_blank', 'width=400,height=600');
           if (printWindow) {
+            const invoiceNumber = (invoice as any).number || (invoice as any).invoiceNumber || 'N/A';
             printWindow.document.write(`
               <html>
                 <head>
-                  <title>Factura ${invoice.invoiceNumber}</title>
+                  <title>Factura ${invoiceNumber}</title>
                   <style>
                     body { margin: 0; padding: 0; }
                     .thermal-receipt { margin: 0 auto; }
@@ -98,6 +101,7 @@ export default function Billing() {
         }
       }, 500);
     } catch (error) {
+      console.error("Print error:", error);
       toast({
         title: "Error",
         description: "No se pudo imprimir la factura",
@@ -256,16 +260,19 @@ export default function Billing() {
 
       {/* Thermal Receipt Dialog */}
       <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="invoice-preview-description">
           <DialogHeader>
             <DialogTitle>Vista Previa de Factura</DialogTitle>
           </DialogHeader>
-          {selectedInvoice && (
+          <div id="invoice-preview-description" className="sr-only">
+            Vista previa de la factura con opciones para imprimir o cerrar
+          </div>
+          {selectedInvoice?.invoice ? (
             <div className="space-y-4">
               <ThermalReceipt
                 ref={receiptRef}
                 invoice={selectedInvoice.invoice}
-                items={selectedInvoice.items}
+                items={selectedInvoice.items || []}
               />
               <div className="flex gap-2 no-print">
                 <Button
@@ -314,6 +321,10 @@ export default function Billing() {
                   Cerrar
                 </Button>
               </div>
+            </div>
+          ) : (
+            <div className="p-4 text-center">
+              <p>Cargando factura...</p>
             </div>
           )}
         </DialogContent>

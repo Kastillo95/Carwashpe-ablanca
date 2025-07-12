@@ -507,13 +507,16 @@ export function QuickInvoiceForm() {
 
       {/* Invoice Preview Dialog */}
       <Dialog open={showInvoicePreview} onOpenChange={setShowInvoicePreview}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="quick-invoice-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
               Vista Previa de Factura
             </DialogTitle>
           </DialogHeader>
+          <div id="quick-invoice-description" className="sr-only">
+            Vista previa de la factura recién creada con opciones para imprimir
+          </div>
           {lastCreatedInvoice?.invoice && (
             <div className="space-y-4">
               <ThermalReceipt
