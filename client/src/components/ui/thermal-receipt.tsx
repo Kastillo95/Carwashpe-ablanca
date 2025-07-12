@@ -10,7 +10,7 @@ interface ThermalReceiptProps {
 
 export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
   ({ invoice, items }, ref) => {
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const subtotal = (items || []).reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const tax = subtotal * 0.15;
     const total = subtotal + tax;
 
@@ -76,7 +76,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         {/* Items */}
         <div className="mb-3">
           <div className="font-bold mb-1">DETALLE DE SERVICIOS</div>
-          {items.map((item, index) => (
+          {(items || []).map((item, index) => (
             <div key={index} className="mb-2">
               <div className="flex justify-between">
                 <span className="flex-1 pr-1">{item.serviceName}</span>
