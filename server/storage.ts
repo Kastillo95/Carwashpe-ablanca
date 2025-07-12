@@ -29,9 +29,11 @@ export interface IStorage {
   // Inventory
   getInventory(): Promise<Inventory[]>;
   getInventoryItem(id: number): Promise<Inventory | undefined>;
+  getInventoryItemByBarcode(barcode: string): Promise<Inventory | undefined>;
   createInventoryItem(item: InsertInventory): Promise<Inventory>;
   updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory>;
   deleteInventoryItem(id: number): Promise<void>;
+  reduceStock(id: number, quantity: number): Promise<Inventory>;
 
   // Invoices
   getInvoices(): Promise<Invoice[]>;
@@ -88,11 +90,11 @@ export class MemStorage implements IStorage {
 
     // Inventory
     const inventoryItems = [
-      { name: "Champú para Autos", description: "Champú concentrado para lavado", quantity: 25, minQuantity: 5, price: "45.00", supplier: "AutoClean", category: "Limpieza" },
-      { name: "Cera Automotriz", description: "Cera protectora premium", quantity: 3, minQuantity: 5, price: "120.00", supplier: "CarCare Pro", category: "Protección" },
-      { name: "Toallas de Microfibra", description: "Toallas de secado premium", quantity: 50, minQuantity: 10, price: "15.00", supplier: "Textiles HN", category: "Accesorios" },
-      { name: "Desengrasante", description: "Desengrasante industrial", quantity: 8, minQuantity: 3, price: "85.00", supplier: "AutoClean", category: "Limpieza" },
-      { name: "Llantas", description: "Limpiador de llantas", quantity: 12, minQuantity: 5, price: "65.00", supplier: "CarCare Pro", category: "Limpieza" },
+      { name: "Champú para Autos", description: "Champú concentrado para lavado", barcode: "001", quantity: 25, minQuantity: 5, price: "45.00", supplier: "AutoClean", category: "Limpieza" },
+      { name: "Cera Automotriz", description: "Cera protectora premium", barcode: "002", quantity: 3, minQuantity: 5, price: "120.00", supplier: "CarCare Pro", category: "Protección" },
+      { name: "Toallas de Microfibra", description: "Toallas de secado premium", barcode: "003", quantity: 50, minQuantity: 10, price: "15.00", supplier: "Textiles HN", category: "Accesorios" },
+      { name: "Desengrasante", description: "Desengrasante industrial", barcode: "004", quantity: 8, minQuantity: 3, price: "85.00", supplier: "AutoClean", category: "Limpieza" },
+      { name: "Limpiador de Llantas", description: "Limpiador especializado para llantas", barcode: "005", quantity: 12, minQuantity: 5, price: "65.00", supplier: "CarCare Pro", category: "Limpieza" },
     ];
 
     inventoryItems.forEach(item => {
@@ -210,6 +212,10 @@ export class MemStorage implements IStorage {
     return this.inventory.get(id);
   }
 
+  async getInventoryItemByBarcode(barcode: string): Promise<Inventory | undefined> {
+    return Array.from(this.inventory.values()).find(item => item.barcode === barcode && item.active);
+  }
+
   async createInventoryItem(item: InsertInventory): Promise<Inventory> {
     const newItem: Inventory = {
       id: this.currentInventoryId++,
@@ -233,6 +239,19 @@ export class MemStorage implements IStorage {
     this.inventory.delete(id);
   }
 
+  async reduceStock(id: number, quantity: number): Promise<Inventory> {
+    const item = this.inventory.get(id);
+    if (!item) throw new Error("Inventory item not found");
+    
+    if (item.quantity < quantity) {
+      throw new Error("Insufficient stock");
+    }
+    
+    const updated = { ...item, quantity: item.quantity - quantity };
+    this.inventory.set(id, updated);
+    return updated;
+  }
+
   // Invoices
   async getInvoices(): Promise<Invoice[]> {
     return Array.from(this.invoices.values());
@@ -252,8 +271,15 @@ export class MemStorage implements IStorage {
     return { invoice, items };
   }
 
-  async createInvoice(data: CreateInvoiceData): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
+  async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
     const invoiceNumber = await this.getNextInvoiceNumber();
+    
+    // Reduce inventory stock if provided
+    if (data.inventoryItems) {
+      for (const inventoryItem of data.inventoryItems) {
+        await this.reduceStock(inventoryItem.id, inventoryItem.quantity);
+      }
+    }
     
     // Calculate totals
     const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);

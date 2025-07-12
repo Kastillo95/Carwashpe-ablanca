@@ -10,6 +10,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 
 // Pages
 import Dashboard from "@/pages/dashboard";
+import QuickBilling from "@/pages/quick-billing";
 import Appointments from "@/pages/appointments";
 import InventoryPage from "@/pages/inventory";
 import Billing from "@/pages/billing";
@@ -27,6 +28,7 @@ function AppContent() {
         <main className="flex-1 p-6">
           <Switch>
             <Route path="/" component={Dashboard} />
+            <Route path="/quick-billing" component={QuickBilling} />
             <Route path="/appointments" component={Appointments} />
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/billing" component={Billing} />

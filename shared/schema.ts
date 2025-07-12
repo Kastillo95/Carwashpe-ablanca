@@ -37,6 +37,7 @@ export const inventory = pgTable("inventory", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  barcode: text("barcode").unique(),
   quantity: integer("quantity").notNull().default(0),
   minQuantity: integer("min_quantity").default(5),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),

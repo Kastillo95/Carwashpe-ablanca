@@ -8,6 +8,15 @@ This is a comprehensive car wash management system built with React (frontend) a
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### December 12, 2024 - Quick Billing System Implementation
+- **Facturación Rápida para Empleados**: Sistema optimizado para facturación con código de barras
+- **Separación de Roles**: Empleados acceden solo a Dashboard, Facturación Rápida y Contacto; Administradores tienen acceso completo
+- **Inventario con Códigos de Barras**: Agregado campo barcode único a productos con datos de muestra (001-005)
+- **Reducción Automática de Stock**: Al crear facturas se reduce automáticamente el inventario
+- **Interfaz Simplificada**: Formulario rápido que solo requiere nombre del cliente, fecha/hora automática
+
 ## System Architecture
 
 ### Frontend Architecture

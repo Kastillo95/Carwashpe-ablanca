@@ -12,9 +12,10 @@ import { useAuth } from "@/hooks/use-auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard, adminOnly: false },
-  { name: "Citas", href: "/appointments", icon: Calendar, adminOnly: false },
-  { name: "Inventario", href: "/inventory", icon: Package, adminOnly: false },
-  { name: "Facturación", href: "/billing", icon: FileText, adminOnly: true },
+  { name: "Facturación Rápida", href: "/quick-billing", icon: FileText, adminOnly: false },
+  { name: "Citas", href: "/appointments", icon: Calendar, adminOnly: true },
+  { name: "Inventario", href: "/inventory", icon: Package, adminOnly: true },
+  { name: "Facturación", href: "/billing", icon: BarChart3, adminOnly: true },
   { name: "Reportes", href: "/reports", icon: BarChart3, adminOnly: true },
   { name: "Contacto", href: "/contact", icon: Phone, adminOnly: false },
 ];
