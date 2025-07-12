@@ -247,12 +247,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/invoices/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log("Fetching invoice with ID:", id);
       const result = await storage.getInvoiceWithItems(id);
+      console.log("Invoice data from storage:", result);
       if (!result) {
         return res.status(404).json({ message: "Factura no encontrada" });
       }
       res.json(result);
     } catch (error) {
+      console.error("Error fetching invoice:", error);
       res.status(500).json({ message: "Error al obtener factura" });
     }
   });

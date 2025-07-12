@@ -46,9 +46,10 @@ export default function Billing() {
 
   const handleViewInvoice = async (invoice: Invoice) => {
     try {
-      const response = await apiRequest("GET", `/api/invoices/${invoice.id}`);
-      console.log("Invoice response:", response);
-      setSelectedInvoice(response);
+      const response = await fetch(`/api/invoices/${invoice.id}`);
+      const data = await response.json();
+      console.log("Invoice response:", data);
+      setSelectedInvoice(data);
       setShowReceiptDialog(true);
     } catch (error) {
       console.error("Error fetching invoice details:", error);
@@ -62,7 +63,8 @@ export default function Billing() {
 
   const handlePrintInvoice = async (invoice: Invoice) => {
     try {
-      const invoiceWithItems = await apiRequest("GET", `/api/invoices/${invoice.id}`);
+      const response = await fetch(`/api/invoices/${invoice.id}`);
+      const invoiceWithItems = await response.json();
       setSelectedInvoice(invoiceWithItems);
       setShowReceiptDialog(true);
       
