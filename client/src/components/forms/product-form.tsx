@@ -17,11 +17,14 @@ import { Inventory } from "@shared/schema";
 const productSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   description: z.string().optional(),
-  quantity: z.number().min(0, "La cantidad debe ser mayor o igual a 0"),
-  minQuantity: z.number().min(0, "La cantidad mínima debe ser mayor o igual a 0"),
-  price: z.string().min(1, "El precio es requerido"),
+  barcode: z.string().min(1, "El código de barras es requerido"),
+  quantity: z.number().min(0).optional(),
+  minQuantity: z.number().min(0).optional(),
+  price: z.number().min(0.01, "El precio debe ser mayor a 0"),
   supplier: z.string().optional(),
   category: z.string().optional(),
+  isService: z.boolean().default(false),
+  active: z.boolean().default(true),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -41,13 +44,18 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
+      barcode: product?.barcode || "",
       quantity: product?.quantity || 0,
       minQuantity: product?.minQuantity || 5,
-      price: product?.price || "",
+      price: parseFloat(String(product?.price)) || 0,
       supplier: product?.supplier || "",
       category: product?.category || "",
+      isService: product?.isService || false,
+      active: product?.active ?? true,
     },
   });
+
+  const isService = form.watch("isService");
 
   const onSubmit = async (data: ProductFormData) => {
     setIsLoading(true);
@@ -114,53 +122,86 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="barcode">Código de Barras</Label>
+              <Input
+                id="barcode"
+                placeholder={isService ? "LAV001" : "001"}
+                {...form.register("barcode")}
+                disabled={isLoading}
+              />
+              {form.formState.errors.barcode && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.barcode.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="category">Categoría</Label>
               <Input
                 id="category"
-                placeholder="Limpieza"
+                placeholder={isService ? "Servicios" : "Limpieza"}
                 {...form.register("category")}
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quantity">Cantidad</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                {...form.register("quantity", { valueAsNumber: true })}
-                disabled={isLoading}
-              />
-              {form.formState.errors.quantity && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.quantity.message}
-                </p>
-              )}
+              <Label>
+                <input
+                  type="checkbox"
+                  {...form.register("isService")}
+                  className="mr-2"
+                />
+                Es un servicio (no requiere inventario)
+              </Label>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="minQuantity">Cantidad Mínima</Label>
-              <Input
-                id="minQuantity"
-                type="number"
-                min="0"
-                {...form.register("minQuantity", { valueAsNumber: true })}
-                disabled={isLoading}
-              />
-              {form.formState.errors.minQuantity && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.minQuantity.message}
-                </p>
-              )}
-            </div>
+            {!isService && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Cantidad en Stock</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    {...form.register("quantity", { valueAsNumber: true })}
+                    disabled={isLoading}
+                  />
+                  {form.formState.errors.quantity && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.quantity.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="minQuantity">Cantidad Mínima</Label>
+                  <Input
+                    id="minQuantity"
+                    type="number"
+                    min="0"
+                    {...form.register("minQuantity", { valueAsNumber: true })}
+                    disabled={isLoading}
+                  />
+                  {form.formState.errors.minQuantity && (
+                    <p className="text-sm text-red-500">
+                      {form.formState.errors.minQuantity.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="price">Precio</Label>
+              <Label htmlFor="price">Precio (L.)</Label>
               <Input
                 id="price"
-                placeholder="45.00"
-                {...form.register("price")}
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder={isService ? "80.00" : "45.00"}
+                {...form.register("price", { valueAsNumber: true })}
                 disabled={isLoading}
               />
               {form.formState.errors.price && (

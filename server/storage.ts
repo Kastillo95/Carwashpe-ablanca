@@ -52,6 +52,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  // DEPRECATED: Esta clase ya no se usa, se mantiene solo para compatibilidad
   private services: Map<number, Service> = new Map();
   private customers: Map<number, Customer> = new Map();
   private appointments: Map<number, Appointment> = new Map();

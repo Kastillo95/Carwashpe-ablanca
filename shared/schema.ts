@@ -38,11 +38,12 @@ export const inventory = pgTable("inventory", {
   name: text("name").notNull(),
   description: text("description"),
   barcode: text("barcode").unique(),
-  quantity: integer("quantity").notNull().default(0),
-  minQuantity: integer("min_quantity").default(5),
+  quantity: integer("quantity").default(0), // Null para servicios
+  minQuantity: integer("min_quantity"), // Null para servicios  
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   supplier: text("supplier"),
   category: text("category"),
+  isService: boolean("is_service").default(false), // True para servicios como lavados
   active: boolean("active").default(true),
 });
 
@@ -79,7 +80,11 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   serviceId: true,
   createdAt: true 
 });
-export const insertInventorySchema = createInsertSchema(inventory).omit({ id: true });
+export const insertInventorySchema = createInsertSchema(inventory).omit({ id: true }).extend({
+  quantity: z.number().min(0).optional(),
+  minQuantity: z.number().min(0).optional(),
+  barcode: z.string().min(1, "Código de barras requerido"),
+});
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ 
   id: true, 
   customerId: true, 

@@ -33,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setIsAdminMode(false);
     localStorage.removeItem('carwash-admin-mode');
+    // Redirect to dashboard when logging out of admin mode
+    window.location.href = '/';
   };
 
   const validatePassword = (password: string): boolean => {
