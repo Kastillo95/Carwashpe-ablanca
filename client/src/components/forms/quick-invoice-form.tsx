@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ShoppingCart, User } from "lucide-react";
+import { Search, ShoppingCart, User, Plus, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -16,10 +18,16 @@ import { getTodayDate, formatCurrency, calculateInvoiceTotals } from "@/lib/util
 
 const quickInvoiceSchema = z.object({
   customerName: z.string().min(1, "El nombre del cliente es requerido"),
-  barcode: z.string().min(1, "Escanee el código de barras"),
+  barcode: z.string().optional(),
+});
+
+const manualAddSchema = z.object({
+  selectedProductId: z.string().min(1, "Seleccione un producto"),
+  quantity: z.number().min(1, "La cantidad debe ser mayor a 0"),
 });
 
 type QuickInvoiceFormData = z.infer<typeof quickInvoiceSchema>;
+type ManualAddFormData = z.infer<typeof manualAddSchema>;
 
 interface CartItem {
   id: number;
@@ -32,6 +40,7 @@ interface CartItem {
 export function QuickInvoiceForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [showManualAdd, setShowManualAdd] = useState(false);
   const { toast } = useToast();
 
   const { data: inventory } = useQuery<Inventory[]>({
@@ -46,6 +55,14 @@ export function QuickInvoiceForm() {
     },
   });
 
+  const manualForm = useForm<ManualAddFormData>({
+    resolver: zodResolver(manualAddSchema),
+    defaultValues: {
+      selectedProductId: "",
+      quantity: 1,
+    },
+  });
+
   const addToCart = (barcode: string) => {
     const product = inventory?.find(item => item.barcode === barcode);
     if (!product) {
@@ -57,7 +74,8 @@ export function QuickInvoiceForm() {
       return;
     }
 
-    if (product.quantity <= 0) {
+    // Los servicios no requieren verificación de stock
+    if (!product.isService && (product.quantity || 0) <= 0) {
       toast({
         title: "Sin stock",
         description: "Este producto no tiene stock disponible",
@@ -66,10 +84,15 @@ export function QuickInvoiceForm() {
       return;
     }
 
+    addProductToCart(product, 1);
+  };
+
+  const addProductToCart = (product: Inventory, quantity: number = 1) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
-        if (existingItem.quantity >= product.quantity) {
+        // Solo verificar stock para productos físicos, no servicios
+        if (!product.isService && existingItem.quantity + quantity > (product.quantity || 0)) {
           toast({
             title: "Stock insuficiente",
             description: "No hay más unidades disponibles",
@@ -79,7 +102,7 @@ export function QuickInvoiceForm() {
         }
         return prevCart.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
@@ -87,13 +110,12 @@ export function QuickInvoiceForm() {
           id: product.id,
           name: product.name,
           price: parseFloat(String(product.price)),
-          quantity: 1,
+          quantity: quantity,
           barcode: product.barcode || "",
         }];
       }
     });
 
-    form.setValue("barcode", "");
     toast({
       title: "Producto agregado",
       description: `${product.name} agregado al carrito`,
@@ -111,7 +133,8 @@ export function QuickInvoiceForm() {
     }
 
     const product = inventory?.find(item => item.id === id);
-    if (product && newQuantity > product.quantity) {
+    // Solo verificar stock para productos físicos, no servicios
+    if (product && !product.isService && newQuantity > (product.quantity || 0)) {
       toast({
         title: "Stock insuficiente",
         description: "No hay suficientes unidades disponibles",
@@ -127,11 +150,21 @@ export function QuickInvoiceForm() {
     );
   };
 
+  const handleManualAdd = (data: ManualAddFormData) => {
+    const product = inventory?.find(item => item.id === parseInt(data.selectedProductId));
+    if (product) {
+      addProductToCart(product, data.quantity);
+      manualForm.reset();
+      setShowManualAdd(false);
+    }
+  };
+
   const totals = calculateInvoiceTotals(cart);
 
   const handleBarcodeSubmit = (data: QuickInvoiceFormData) => {
     if (data.barcode) {
       addToCart(data.barcode);
+      form.setValue("barcode", "");
     }
   };
 
@@ -258,6 +291,94 @@ export function QuickInvoiceForm() {
               </div>
             </div>
           </form>
+
+          <div className="mt-4 text-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowManualAdd(!showManualAdd)}
+              className="w-full"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {showManualAdd ? "Ocultar" : "Agregar"} Producto Manual
+            </Button>
+          </div>
+
+          {showManualAdd && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-sm">Seleccionar Producto/Servicio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={manualForm.handleSubmit(handleManualAdd)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="selectedProductId">Producto/Servicio</Label>
+                    <Select onValueChange={(value) => manualForm.setValue("selectedProductId", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione un producto o servicio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventory?.filter(item => item.active).map((item) => (
+                          <SelectItem key={item.id} value={item.id.toString()}>
+                            <div className="flex items-center justify-between w-full">
+                              <span>{item.name}</span>
+                              <div className="flex items-center gap-2 ml-4">
+                                <Badge variant={item.isService ? "default" : "secondary"}>
+                                  {item.isService ? "Servicio" : "Producto"}
+                                </Badge>
+                                <span className="text-sm font-medium">
+                                  {formatCurrency(parseFloat(String(item.price)))}
+                                </span>
+                                {!item.isService && (
+                                  <span className="text-xs text-gray-500">
+                                    Stock: {item.quantity || 0}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {manualForm.formState.errors.selectedProductId && (
+                      <p className="text-sm text-red-500">
+                        {manualForm.formState.errors.selectedProductId.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Cantidad</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      defaultValue={1}
+                      {...manualForm.register("quantity", { valueAsNumber: true })}
+                    />
+                    {manualForm.formState.errors.quantity && (
+                      <p className="text-sm text-red-500">
+                        {manualForm.formState.errors.quantity.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1">
+                      Agregar al Carrito
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setShowManualAdd(false)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
 
@@ -271,7 +392,7 @@ export function QuickInvoiceForm() {
         <CardContent>
           {cart.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
-              El carrito está vacío. Escanee un código de barras para agregar productos.
+              El carrito está vacío. Escanee un código de barras o use selección manual para agregar productos.
             </p>
           ) : (
             <div className="space-y-4">
