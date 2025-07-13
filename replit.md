@@ -22,6 +22,8 @@ Preferred communication style: Simple, everyday language.
 - **API Invoice Fix**: Corregido problema de respuesta vacía en vista previa de facturas
 - **React Error Fix**: Solucionado error de renderizado de objeto BUSINESS_INFO.hours
 - **Print Enhancement**: Mejorado sistema de impresión para usuarios normales con mejor manejo de errores
+- **Tax Information Hidden**: Eliminada información de impuestos de facturas para evitar apariencia de cobro fiscal
+- **Simplified Invoice Display**: Facturas ahora muestran solo total sin desglose de impuestos
 
 ## System Architecture
 

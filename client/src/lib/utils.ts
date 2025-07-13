@@ -40,12 +40,12 @@ export function calculateInvoiceTotals(items: Array<{quantity: number, price?: n
     return sum + (quantity * price);
   }, 0);
   
-  const tax = subtotal * 0.15;
-  const total = subtotal + tax;
+  const tax = 0; // No mostrar impuestos
+  const total = subtotal;
   
   return {
     subtotal: isNaN(subtotal) ? 0 : subtotal,
-    tax: isNaN(tax) ? 0 : tax,
+    tax: 0, // Siempre 0
     total: isNaN(total) ? 0 : total
   };
 }

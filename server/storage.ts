@@ -291,10 +291,10 @@ export class MemStorage implements IStorage {
       }
     }
     
-    // Calculate totals
+    // Calculate totals (sin mostrar impuestos)
     const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const tax = subtotal * 0.15; // 15% ISV
-    const total = subtotal + tax;
+    const tax = 0; // No mostrar impuestos
+    const total = subtotal;
     
     // Create invoice
     const invoice: Invoice = {
@@ -582,10 +582,10 @@ export class DatabaseStorage implements IStorage {
       // Get next invoice number
       const invoiceNumber = await this.getNextInvoiceNumber();
       
-      // Calculate totals
+      // Calculate totals (sin mostrar impuestos)
       const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-      const tax = subtotal * 0.15; // 15% ISV
-      const total = subtotal + tax;
+      const tax = 0; // No mostrar impuestos
+      const total = subtotal;
       
       // Create invoice
       const [invoice] = await tx.insert(invoices).values({
