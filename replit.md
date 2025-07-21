@@ -22,6 +22,9 @@ Preferred communication style: Simple, everyday language.
 - **Acceso Completo a Facturación**: Usuarios normales tienen acceso completo al módulo de facturación
 - **Corrección de IDs**: Solucionado problema de IDs decimales que causaba errores en la base de datos
 - **Interfaz Dual**: Modo admin ve lista completa de facturas, usuarios normales solo crean facturas nuevas
+- **Sistema Excel para Inventario**: Implementado exportación e importación de inventario en formato Excel
+- **Logo en Facturas**: Integrado logo oficial del carwash en recibos térmicos
+- **Acceso Inventario Universal**: Usuarios normales pueden ver inventario (solo lectura) y exportar Excel
 
 ### July 12, 2025 - Migración y Sistema Térmico Original
 - **Migración Completa a Replit**: Sistema migrado exitosamente de Replit Agent a ambiente estándar de Replit

@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ProductForm } from "@/components/forms/product-form";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { 
   Plus, 
   Edit, 
   Trash2, 
   Package, 
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Download,
+  Upload,
+  FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +32,8 @@ export default function InventoryPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Inventory | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: inventory, isLoading } = useQuery<Inventory[]>({
     queryKey: ["/api/inventory"],
@@ -66,6 +74,124 @@ export default function InventoryPage() {
       });
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleExportToExcel = () => {
+    if (!inventory || inventory.length === 0) {
+      toast({
+        title: "Sin datos",
+        description: "No hay productos en el inventario para exportar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = inventory.map(item => ({
+      'ID': item.id,
+      'Nombre': item.name,
+      'Descripción': item.description,
+      'Precio': parseFloat(item.price.toString()),
+      'Cantidad': item.quantity,
+      'Código de Barras': item.barcode,
+      'Proveedor': item.supplier || '',
+      'Es Servicio': item.isService ? 'Sí' : 'No',
+      'Activo': item.active ? 'Sí' : 'No'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+
+    // Auto-adjust column widths
+    const cols = [
+      { wch: 5 },   // ID
+      { wch: 25 },  // Nombre
+      { wch: 30 },  // Descripción
+      { wch: 10 },  // Precio
+      { wch: 10 },  // Cantidad
+      { wch: 15 },  // Código de Barras
+      { wch: 20 },  // Proveedor
+      { wch: 12 },  // Es Servicio
+      { wch: 8 }    // Activo
+    ];
+    ws['!cols'] = cols;
+
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    const fileName = `inventario-carwash-${new Date().toISOString().split('T')[0]}.xlsx`;
+    saveAs(data, fileName);
+
+    toast({
+      title: "Excel exportado",
+      description: `Archivo ${fileName} descargado exitosamente.`,
+    });
+  };
+
+  const handleImportFromExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      const importedItems = jsonData.map((row: any) => ({
+        name: row['Nombre'] || row['name'] || '',
+        description: row['Descripción'] || row['description'] || '',
+        price: parseFloat(row['Precio'] || row['price'] || '0'),
+        quantity: parseInt(row['Cantidad'] || row['quantity'] || '0'),
+        barcode: row['Código de Barras'] || row['barcode'] || '',
+        supplier: row['Proveedor'] || row['supplier'] || '',
+        isService: (row['Es Servicio'] || row['isService']) === 'Sí' || (row['Es Servicio'] || row['isService']) === true,
+        active: (row['Activo'] || row['active']) !== 'No' && (row['Activo'] || row['active']) !== false
+      }));
+
+      // Import items one by one
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const item of importedItems) {
+        try {
+          if (!item.name || !item.price) {
+            errorCount++;
+            continue;
+          }
+
+          await apiRequest("POST", "/api/inventory", {
+            ...item,
+            password: ADMIN_PASSWORD,
+          });
+          successCount++;
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+
+      toast({
+        title: "Importación completada",
+        description: `${successCount} productos importados exitosamente. ${errorCount > 0 ? `${errorCount} errores.` : ''}`,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Error de importación",
+        description: "No se pudo procesar el archivo Excel. Verifica el formato.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -156,15 +282,44 @@ export default function InventoryPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Inventario</h2>
           <p className="text-gray-600">Gestión de productos y suministros</p>
         </div>
-        {isAdminMode && (
-          <Button
-            onClick={handleAddProduct}
-            className="bg-brand-blue hover:bg-blue-800"
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleExportToExcel}
+            variant="outline"
+            disabled={!inventory || inventory.length === 0}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Producto
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Excel
           </Button>
-        )}
+          {isAdminMode && (
+            <>
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                disabled={isImporting}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isImporting ? "Importando..." : "Importar Excel"}
+              </Button>
+              <Button
+                onClick={handleAddProduct}
+                className="bg-brand-blue hover:bg-blue-800"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Producto
+              </Button>
+            </>
+          )}
+        </div>
+
+      {/* Hidden file input for Excel import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls"
+        onChange={handleImportFromExcel}
+        style={{ display: 'none' }}
+      />
       </div>
 
       {/* Inventory Grid */}
