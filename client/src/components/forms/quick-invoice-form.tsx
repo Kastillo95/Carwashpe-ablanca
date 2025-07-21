@@ -229,7 +229,19 @@ export function QuickInvoiceForm() {
           unitPrice: item.price,
         })),
         inventoryItems: cart
-          .filter(item => !item.isService && typeof item.id === 'number' && item.id < 1000000) // Only real inventory items
+          .filter(item => {
+            // Only include real inventory items (not services from SERVICES constant)
+            const isRealInventoryItem = !item.isService && 
+                                      typeof item.id === 'number' && 
+                                      item.id < 1000000 && 
+                                      !item.barcode?.startsWith('service-') &&
+                                      item.barcode !== 'complete' && 
+                                      item.barcode !== 'wax' && 
+                                      item.barcode !== 'express' && 
+                                      item.barcode !== 'interior';
+            console.log(`Item ${item.name} (ID: ${item.id}, barcode: ${item.barcode}, isService: ${item.isService}) - Include in inventory: ${isRealInventoryItem}`);
+            return isRealInventoryItem;
+          })
           .map(item => ({
             id: item.id,
             quantity: item.quantity,

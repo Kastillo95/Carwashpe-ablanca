@@ -561,10 +561,14 @@ export class DatabaseStorage implements IStorage {
   async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
     return await db.transaction(async (tx) => {
       // Reduce inventory stock if provided (only for physical products, not services)
-      if (data.inventoryItems) {
+      if (data.inventoryItems && data.inventoryItems.length > 0) {
+        console.log('Processing inventory items:', data.inventoryItems);
         for (const inventoryItem of data.inventoryItems) {
           const [item] = await tx.select().from(inventory).where(eq(inventory.id, inventoryItem.id));
-          if (!item) throw new Error("Inventory item not found");
+          if (!item) {
+            console.error(`Inventory item not found: ID ${inventoryItem.id}`);
+            throw new Error(`Inventory item not found: ID ${inventoryItem.id}`);
+          }
           
           // Only check and reduce stock for physical products (not services)
           if (!item.isService) {
