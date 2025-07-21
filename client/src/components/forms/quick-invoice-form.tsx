@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ThermalReceipt } from "@/components/ui/thermal-receipt";
 import { type Inventory, type Invoice, type InvoiceItem } from "@shared/schema";
 import { getTodayDate, formatCurrency, calculateInvoiceTotals } from "@/lib/utils";
+import { SERVICES } from "@/lib/constants";
 
 const quickInvoiceSchema = z.object({
   customerName: z.string().min(1, "El nombre del cliente es requerido"),
@@ -156,6 +157,27 @@ export function QuickInvoiceForm() {
   };
 
   const handleManualAdd = (data: ManualAddFormData) => {
+    // Check if it's a service from SERVICES constant
+    if (data.selectedProductId.startsWith('service-')) {
+      const serviceKey = data.selectedProductId.replace('service-', '');
+      const service = SERVICES[serviceKey as keyof typeof SERVICES];
+      if (service) {
+        const mockProduct = {
+          id: Math.random(), // Temporary ID for services
+          name: service.name,
+          price: service.price,
+          quantity: 999, // Services don't have stock limitations
+          barcode: serviceKey,
+          isService: true
+        };
+        addProductToCart(mockProduct as any, data.quantity);
+        manualForm.reset();
+        setShowManualAdd(false);
+        return;
+      }
+    }
+
+    // Check inventory items
     const product = inventory?.find(item => item.id === parseInt(data.selectedProductId));
     if (product) {
       addProductToCart(product, data.quantity);
@@ -394,18 +416,34 @@ export function QuickInvoiceForm() {
                         <SelectValue placeholder="Seleccione un producto o servicio" />
                       </SelectTrigger>
                       <SelectContent>
+                        {/* Show predefined services first */}
+                        {Object.entries(SERVICES).map(([key, service]) => (
+                          <SelectItem key={key} value={`service-${key}`}>
+                            <div className="flex items-center justify-between w-full">
+                              <span>{service.name}</span>
+                              <div className="flex items-center gap-2 ml-4">
+                                <Badge variant="default">Servicio</Badge>
+                                <span className="text-sm font-medium">
+                                  {formatCurrency(service.price)}
+                                </span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        
+                        {/* Show inventory items */}
                         {inventory?.filter(item => item.active).map((item) => (
                           <SelectItem key={item.id} value={item.id.toString()}>
                             <div className="flex items-center justify-between w-full">
                               <span>{item.name}</span>
                               <div className="flex items-center gap-2 ml-4">
-                                <Badge variant={item.isService ? "default" : "secondary"}>
-                                  {item.isService ? "Servicio" : "Producto"}
+                                <Badge variant={item.isService || item.is_service ? "default" : "secondary"}>
+                                  {item.isService || item.is_service ? "Servicio" : "Producto"}
                                 </Badge>
                                 <span className="text-sm font-medium">
                                   {formatCurrency(parseFloat(String(item.price)))}
                                 </span>
-                                {!item.isService && (
+                                {!(item.isService || item.is_service) && (
                                   <span className="text-xs text-gray-500">
                                     Stock: {item.quantity || 0}
                                   </span>
@@ -414,6 +452,13 @@ export function QuickInvoiceForm() {
                             </div>
                           </SelectItem>
                         ))}
+                        
+                        {/* Show message if no options available */}
+                        {(!inventory || inventory.length === 0) && Object.keys(SERVICES).length === 0 && (
+                          <SelectItem value="no-items" disabled>
+                            No hay productos o servicios disponibles
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     {manualForm.formState.errors.selectedProductId && (

@@ -10,7 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 12, 2025 - Replit Migration and Thermal Receipt System
+### July 21, 2025 - Sistema de Facturación Mejorado con Vista Previa SAP
+- **Sistema de Facturación SAP**: Implementado interfaz estilo SAP con vista previa en tiempo real lado a lado
+- **Acceso Universal a Productos**: Usuarios normales ahora pueden acceder a todos los servicios y productos
+- **Vista Previa Automática**: Actualización en tiempo real de la vista previa mientras se llena el formulario
+- **Base de Datos Expandida**: Agregados productos de muestra (champú, cera, limpiador, aromatizante, aspirado)
+- **Selección Manual Mejorada**: Corregido sistema de selección manual en facturación rápida
+- **Servicios Predefinidos**: Integrados servicios de CONSTANTS disponibles para todos los usuarios
+- **Impresión Directa**: Opciones mejoradas de impresión con vista previa térmica profesional
+- **Interfaz Dual**: Modo admin ve lista completa de facturas, usuarios normales solo crean facturas nuevas
+
+### July 12, 2025 - Migración y Sistema Térmico Original
 - **Migración Completa a Replit**: Sistema migrado exitosamente de Replit Agent a ambiente estándar de Replit
 - **Sistema de Facturación Térmica**: Implementado diseño profesional de recibos térmicos con logo empresarial
 - **Vista Previa de Facturas**: Usuarios normales pueden crear facturas con vista previa e impresión
