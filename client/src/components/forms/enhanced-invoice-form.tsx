@@ -323,7 +323,7 @@ export function EnhancedInvoiceForm() {
                         <SelectValue placeholder="Seleccionar..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="" disabled>Seleccionar servicio o producto</SelectItem>
+                        <SelectItem value="placeholder" disabled>Seleccionar servicio o producto</SelectItem>
                         {allOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
