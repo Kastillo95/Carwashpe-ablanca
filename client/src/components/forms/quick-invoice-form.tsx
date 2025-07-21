@@ -163,7 +163,7 @@ export function QuickInvoiceForm() {
       const service = SERVICES[serviceKey as keyof typeof SERVICES];
       if (service) {
         const mockProduct = {
-          id: Math.random(), // Temporary ID for services
+          id: Math.floor(Math.random() * 1000000), // Generate integer ID for services
           name: service.name,
           price: service.price,
           quantity: 999, // Services don't have stock limitations
@@ -228,10 +228,12 @@ export function QuickInvoiceForm() {
           quantity: item.quantity,
           unitPrice: item.price,
         })),
-        inventoryItems: cart.map(item => ({
-          id: item.id,
-          quantity: item.quantity,
-        })),
+        inventoryItems: cart
+          .filter(item => !item.isService && typeof item.id === 'number' && item.id < 1000000) // Only real inventory items
+          .map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+          })),
         date: getTodayDate(),
       };
 
