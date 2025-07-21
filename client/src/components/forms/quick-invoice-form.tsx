@@ -230,15 +230,20 @@ export function QuickInvoiceForm() {
         })),
         inventoryItems: cart
           .filter(item => {
-            // Only include real inventory items (not services from SERVICES constant)
-            const isRealInventoryItem = !item.isService && 
+            // Only include real inventory items (not services)
+            // Check if it's a service by multiple criteria
+            const isService = item.isService || 
+                             item.barcode?.startsWith('service-') ||
+                             item.barcode === 'complete' || 
+                             item.barcode === 'wax' || 
+                             item.barcode === 'express' || 
+                             item.barcode === 'interior' ||
+                             item.barcode === 'SVC-ASP' ||
+                             item.name?.toLowerCase().includes('servicio');
+            
+            const isRealInventoryItem = !isService && 
                                       typeof item.id === 'number' && 
-                                      item.id < 1000000 && 
-                                      !item.barcode?.startsWith('service-') &&
-                                      item.barcode !== 'complete' && 
-                                      item.barcode !== 'wax' && 
-                                      item.barcode !== 'express' && 
-                                      item.barcode !== 'interior';
+                                      item.id < 1000000;
             console.log(`Item ${item.name} (ID: ${item.id}, barcode: ${item.barcode}, isService: ${item.isService}) - Include in inventory: ${isRealInventoryItem}`);
             return isRealInventoryItem;
           })

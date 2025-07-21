@@ -571,7 +571,10 @@ export class DatabaseStorage implements IStorage {
           }
           
           // Only check and reduce stock for physical products (not services)
-          if (!item.isService) {
+          const isService = item.isService || item.is_service || item.name?.toLowerCase().includes('servicio');
+          console.log(`Item ${item.name}: isService=${item.isService}, is_service=${item.is_service}, calculated isService=${isService}`);
+          
+          if (!isService) {
             if ((item.quantity || 0) < inventoryItem.quantity) {
               throw new Error(`Stock insuficiente para ${item.name}`);
             }
@@ -579,6 +582,8 @@ export class DatabaseStorage implements IStorage {
             await tx.update(inventory)
               .set({ quantity: (item.quantity || 0) - inventoryItem.quantity })
               .where(eq(inventory.id, inventoryItem.id));
+          } else {
+            console.log(`Skipping stock reduction for service: ${item.name}`);
           }
         }
       }
