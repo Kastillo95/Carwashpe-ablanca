@@ -15,7 +15,7 @@ const navigation = [
   { name: "Facturación Rápida", href: "/quick-billing", icon: FileText, adminOnly: false },
   { name: "Citas", href: "/appointments", icon: Calendar, adminOnly: true },
   { name: "Inventario", href: "/inventory", icon: Package, adminOnly: true },
-  { name: "Facturación", href: "/billing", icon: BarChart3, adminOnly: true },
+  { name: "Facturación", href: "/billing", icon: FileText, adminOnly: false },
   { name: "Reportes", href: "/reports", icon: BarChart3, adminOnly: true },
   { name: "Contacto", href: "/contact", icon: Phone, adminOnly: false },
 ];

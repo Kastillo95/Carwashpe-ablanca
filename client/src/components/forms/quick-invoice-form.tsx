@@ -268,12 +268,13 @@ export function QuickInvoiceForm() {
         description: "La factura se ha generado exitosamente e imprimiendo automáticamente",
       });
 
-      // Automatically print after creation
+      // Show print dialog after creation
       setTimeout(() => {
-        if (result && receiptRef.current) {
-          handlePrint();
+        if (result) {
+          // Auto-show the print dialog
+          setShowInvoicePreview(true);
         }
-      }, 1000);
+      }, 500);
 
       // Reset form and cart
       form.reset({

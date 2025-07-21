@@ -17,7 +17,9 @@ Preferred communication style: Simple, everyday language.
 - **Base de Datos Expandida**: Agregados productos de muestra (champú, cera, limpiador, aromatizante, aspirado)
 - **Selección Manual Mejorada**: Corregido sistema de selección manual en facturación rápida
 - **Servicios Predefinidos**: Integrados servicios de CONSTANTS disponibles para todos los usuarios
-- **Impresión Automática**: Facturas se imprimen automáticamente después de crearse exitosamente
+- **Vista de Facturas para Usuarios**: Usuarios normales pueden ver la lista completa de facturas (solo lectura)
+- **Opciones de Impresión Mejoradas**: Diálogo de impresión después de crear facturas en ambos modos
+- **Acceso Completo a Facturación**: Usuarios normales tienen acceso completo al módulo de facturación
 - **Corrección de IDs**: Solucionado problema de IDs decimales que causaba errores en la base de datos
 - **Interfaz Dual**: Modo admin ve lista completa de facturas, usuarios normales solo crean facturas nuevas
 

@@ -112,16 +112,96 @@ export default function Billing() {
     }
   };
 
-  // Non-admin users can create invoices but can't see the invoice list
+  // Non-admin users can create and view invoices but can't edit them
   if (!isAdminMode) {
+    if (showForm) {
+      return (
+        <div className="space-y-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Nueva Factura</h2>
+              <p className="text-gray-600">Crear nueva factura con vista previa en tiempo real</p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowForm(false)}
+            >
+              Volver a Lista
+            </Button>
+          </div>
+          
+          <EnhancedInvoiceForm />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Facturación</h2>
-          <p className="text-gray-600">Crear nueva factura con vista previa en tiempo real</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Facturas</h2>
+            <p className="text-gray-600">Ver facturas creadas</p>
+          </div>
+          <Button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Nueva Factura
+          </Button>
         </div>
-        
-        <EnhancedInvoiceForm />
+
+        {/* Invoice List for Non-Admin (Read-Only) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Lista de Facturas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Número</th>
+                    <th className="text-left p-2">Cliente</th>
+                    <th className="text-left p-2">Fecha</th>
+                    <th className="text-left p-2">Total</th>
+                    <th className="text-left p-2">Estado</th>
+                    <th className="text-left p-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices?.map((invoice) => (
+                    <tr key={invoice.id} className="border-b hover:bg-gray-50">
+                      <td className="p-2 font-medium">{invoice.number}</td>
+                      <td className="p-2">{invoice.customerName}</td>
+                      <td className="p-2">{new Date(invoice.date).toLocaleDateString()}</td>
+                      <td className="p-2 font-semibold">L. {parseFloat(invoice.total).toFixed(2)}</td>
+                      <td className="p-2">
+                        <Badge 
+                          variant={invoice.status === "paid" ? "default" : "secondary"}
+                        >
+                          {invoice.status === "paid" ? "Pagada" : "Pendiente"}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewInvoice(invoice.id)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
