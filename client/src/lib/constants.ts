@@ -6,6 +6,7 @@ export const BUSINESS_INFO = {
   addressDetail: "Frente a Cielos y Pisos",
   phone: "+504 9464-8987",
   whatsapp: "50494648987",
+  rtn: "08011234567890",
   hours: {
     weekdays: "Lunes a Viernes: 8:00 AM - 6:00 PM",
     saturday: "Sábados: 8:00 AM - 4:00 PM",

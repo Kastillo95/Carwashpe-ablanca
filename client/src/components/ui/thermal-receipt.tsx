@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { BUSINESS_INFO } from "@/lib/constants";
 import type { Invoice, InvoiceItem } from "@shared/schema";
+import logoPath from "@assets/IMG_20250706_211100_1752220069225.jpg";
 
 interface ThermalReceiptProps {
   invoice: Invoice | null;
@@ -32,13 +33,21 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
       >
         {/* Header with Logo Area */}
         <div className="text-center mb-4">
-          <div className="w-16 h-16 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">CW</span>
+          <div className="mx-auto mb-2 w-20 h-16 overflow-hidden rounded-lg">
+            <img 
+              src={logoPath} 
+              alt="Carwash Peña Blanca"
+              className="w-full h-full object-cover"
+              style={{ 
+                filter: 'contrast(1.1) brightness(1.1)',
+                imageRendering: 'crisp-edges'
+              }}
+            />
           </div>
           <div className="font-bold text-sm uppercase">{BUSINESS_INFO.name}</div>
           <div className="text-xs">{BUSINESS_INFO.address}</div>
+          <div className="text-xs">{BUSINESS_INFO.addressDetail}</div>
           <div className="text-xs">Tel: {BUSINESS_INFO.phone}</div>
-          <div className="text-xs">RTN: {BUSINESS_INFO.rtn}</div>
         </div>
 
         {/* Separator */}
