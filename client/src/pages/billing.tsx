@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { InvoiceForm } from "@/components/forms/invoice-form";
+import { EnhancedInvoiceForm } from "@/components/forms/enhanced-invoice-form";
 import { ThermalReceipt } from "@/components/ui/thermal-receipt";
 import { 
   FileText, 
@@ -112,28 +112,16 @@ export default function Billing() {
     }
   };
 
-  // Redirect non-admin users
+  // Non-admin users can create invoices but can't see the invoice list
   if (!isAdminMode) {
     return (
       <div className="space-y-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Facturación</h2>
-          <p className="text-gray-600">Acceso restringido a administradores</p>
+          <p className="text-gray-600">Crear nueva factura con vista previa en tiempo real</p>
         </div>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                Acceso Restringido
-              </h3>
-              <p className="text-gray-600">
-                Necesitas permisos de administrador para acceder a la facturación.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EnhancedInvoiceForm />
       </div>
     );
   }
@@ -171,7 +159,7 @@ export default function Billing() {
           </Button>
         </div>
 
-        <InvoiceForm />
+        <EnhancedInvoiceForm />
       </div>
     );
   }
