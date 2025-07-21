@@ -17,7 +17,8 @@ Preferred communication style: Simple, everyday language.
 - **Base de Datos Expandida**: Agregados productos de muestra (champú, cera, limpiador, aromatizante, aspirado)
 - **Selección Manual Mejorada**: Corregido sistema de selección manual en facturación rápida
 - **Servicios Predefinidos**: Integrados servicios de CONSTANTS disponibles para todos los usuarios
-- **Impresión Directa**: Opciones mejoradas de impresión con vista previa térmica profesional
+- **Impresión Automática**: Facturas se imprimen automáticamente después de crearse exitosamente
+- **Corrección de IDs**: Solucionado problema de IDs decimales que causaba errores en la base de datos
 - **Interfaz Dual**: Modo admin ve lista completa de facturas, usuarios normales solo crean facturas nuevas
 
 ### July 12, 2025 - Migración y Sistema Térmico Original

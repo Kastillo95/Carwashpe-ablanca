@@ -156,6 +156,13 @@ export function EnhancedInvoiceForm() {
       
       if (action === 'print') {
         setShowPrintDialog(true);
+      } else {
+        // Auto-print for regular save action
+        setTimeout(() => {
+          if (result && receiptRef.current) {
+            handlePrint();
+          }
+        }, 1000);
       }
       
       form.reset();

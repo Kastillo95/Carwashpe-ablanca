@@ -245,8 +245,15 @@ export function QuickInvoiceForm() {
       
       toast({
         title: "Factura creada",
-        description: "La factura se ha generado exitosamente",
+        description: "La factura se ha generado exitosamente e imprimiendo automáticamente",
       });
+
+      // Automatically print after creation
+      setTimeout(() => {
+        if (result && receiptRef.current) {
+          handlePrint();
+        }
+      }, 1000);
 
       // Reset form and cart
       form.reset({
