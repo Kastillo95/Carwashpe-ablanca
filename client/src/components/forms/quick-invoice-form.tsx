@@ -238,12 +238,15 @@ export function QuickInvoiceForm() {
                              item.barcode === 'wax' || 
                              item.barcode === 'express' || 
                              item.barcode === 'interior' ||
+                             item.barcode === 'detallado' ||  // Add this barcode
                              item.barcode === 'SVC-ASP' ||
-                             item.name?.toLowerCase().includes('servicio');
+                             item.name?.toLowerCase().includes('servicio') ||
+                             item.id >= 100000; // Services have high generated IDs
             
             const isRealInventoryItem = !isService && 
                                       typeof item.id === 'number' && 
-                                      item.id < 1000000;
+                                      item.id > 0 && 
+                                      item.id <= 10000; // Only real database inventory items
             console.log(`Item ${item.name} (ID: ${item.id}, barcode: ${item.barcode}, isService: ${item.isService}) - Include in inventory: ${isRealInventoryItem}`);
             return isRealInventoryItem;
           })
