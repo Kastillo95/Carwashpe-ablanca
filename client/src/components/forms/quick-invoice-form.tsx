@@ -307,9 +307,12 @@ export function QuickInvoiceForm() {
             <head>
               <title>Factura ${invoiceNumber}</title>
               <style>
+                * {
+                  box-sizing: border-box;
+                }
                 body { 
                   margin: 0; 
-                  padding: 20px; 
+                  padding: 15px; 
                   font-family: 'Courier New', monospace;
                   font-size: 12px;
                   line-height: 1.2;
@@ -321,9 +324,91 @@ export function QuickInvoiceForm() {
                   margin: 0 auto; 
                   background: white;
                   color: black;
+                  font-family: 'Courier New', monospace;
+                  font-size: 12px;
+                  padding: 10px;
+                }
+                .thermal-receipt img {
+                  max-width: 100%;
+                  height: auto;
+                  display: block;
+                  margin: 0 auto;
+                  border-radius: 8px;
                 }
                 .no-print {
                   display: none !important;
+                }
+                .text-center {
+                  text-align: center;
+                }
+                .text-xs {
+                  font-size: 10px;
+                }
+                .text-sm {
+                  font-size: 11px;
+                }
+                .font-bold {
+                  font-weight: bold;
+                }
+                .font-semibold {
+                  font-weight: 600;
+                }
+                .uppercase {
+                  text-transform: uppercase;
+                }
+                .border-t {
+                  border-top: 1px solid #000;
+                }
+                .border-dashed {
+                  border-style: dashed;
+                }
+                .border-solid {
+                  border-style: solid;
+                }
+                .border-gray-400 {
+                  border-color: #666;
+                }
+                .text-gray-600 {
+                  color: #666;
+                }
+                .mb-1 { margin-bottom: 4px; }
+                .mb-2 { margin-bottom: 8px; }
+                .mb-3 { margin-bottom: 12px; }
+                .mb-4 { margin-bottom: 16px; }
+                .my-1 { margin-top: 4px; margin-bottom: 4px; }
+                .my-2 { margin-top: 8px; margin-bottom: 8px; }
+                .flex {
+                  display: flex;
+                }
+                .justify-between {
+                  justify-content: space-between;
+                }
+                .flex-1 {
+                  flex: 1;
+                }
+                .pr-1 {
+                  padding-right: 4px;
+                }
+                .w-12 {
+                  width: 48px;
+                }
+                .text-right {
+                  text-align: right;
+                }
+                .w-20 {
+                  width: 80px;
+                }
+                .h-16 {
+                  height: 64px;
+                }
+                .overflow-hidden {
+                  overflow: hidden;
+                }
+                .rounded-lg {
+                  border-radius: 8px;
+                }
+                .object-cover {
+                  object-fit: cover;
                 }
                 @media print {
                   body { 
@@ -333,6 +418,13 @@ export function QuickInvoiceForm() {
                   .thermal-receipt {
                     width: 100%;
                     margin: 0;
+                    padding: 5px;
+                  }
+                  img {
+                    max-width: 100% !important;
+                    height: auto !important;
+                    print-color-adjust: exact;
+                    -webkit-print-color-adjust: exact;
                   }
                 }
                 @page {
@@ -345,12 +437,44 @@ export function QuickInvoiceForm() {
               ${receiptRef.current.innerHTML}
               <script>
                 window.onload = function() {
-                  setTimeout(() => {
-                    window.print();
+                  // Wait for images to load before printing
+                  const images = document.querySelectorAll('img');
+                  let loadedImages = 0;
+                  
+                  if (images.length === 0) {
+                    printAndClose();
+                  } else {
+                    images.forEach(img => {
+                      if (img.complete) {
+                        loadedImages++;
+                        if (loadedImages === images.length) {
+                          printAndClose();
+                        }
+                      } else {
+                        img.onload = () => {
+                          loadedImages++;
+                          if (loadedImages === images.length) {
+                            printAndClose();
+                          }
+                        };
+                        img.onerror = () => {
+                          loadedImages++;
+                          if (loadedImages === images.length) {
+                            printAndClose();
+                          }
+                        };
+                      }
+                    });
+                  }
+                  
+                  function printAndClose() {
                     setTimeout(() => {
-                      window.close();
-                    }, 1000);
-                  }, 500);
+                      window.print();
+                      setTimeout(() => {
+                        window.close();
+                      }, 1000);
+                    }, 500);
+                  }
                 };
               </script>
             </body>

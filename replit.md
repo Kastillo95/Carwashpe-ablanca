@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 26, 2025 - Migración a Replit Estándar y Optimización de Impresión Térmica
+- **Migración Completa**: Sistema migrado exitosamente de Replit Agent a ambiente estándar de Replit
+- **Configuración PostgreSQL**: Actualizada configuración de base de datos de Neon a PostgreSQL local de Replit
+- **Optimización de Impresión Térmica**: Mejorado sistema de impresión con estilos CSS completos y carga de imágenes
+- **Corrección de Errores TypeScript**: Solucionados problemas de tipos en cálculos de facturas
+- **Sistema de Impresión Unificado**: Todas las funciones de impresión ahora usan el mismo formato térmico optimizado
+- **Esquema de Base de Datos**: Migración exitosa de esquemas con Drizzle ORM
+
 ### July 21, 2025 - Sistema de Facturación Mejorado con Vista Previa SAP
 - **Sistema de Facturación SAP**: Implementado interfaz estilo SAP con vista previa en tiempo real lado a lado
 - **Acceso Universal a Productos**: Usuarios normales ahora pueden acceder a todos los servicios y productos

@@ -16,7 +16,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
     }
     
     const invoiceItems = items || [];
-    const subtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const subtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * Number(item.unitPrice)), 0);
     const total = subtotal; // No mostrar impuestos
 
     return (
@@ -97,7 +97,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
               </div>
               <div className="flex justify-between text-xs text-gray-600">
                 <span>{item.quantity} x {formatCurrency(item.unitPrice)}</span>
-                <span className="font-semibold">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                <span className="font-semibold">{formatCurrency(item.quantity * Number(item.unitPrice))}</span>
               </div>
             </div>
           ))}
