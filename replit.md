@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Corrección de Errores TypeScript**: Solucionados problemas de tipos en cálculos de facturas
 - **Sistema de Impresión Unificado**: Todas las funciones de impresión usan formato térmico optimizado con logo incluido
 - **Esquema de Base de Datos**: Migración exitosa de esquemas con Drizzle ORM
-- **Actualización de Horarios**: Horarios actualizados - Lunes a Viernes: 8am-5pm, Domingos: 8am-3pm, Sábados cerrado
+- **Actualización de Horarios**: Horarios actualizados - Lunes a Sábado: 8am-5pm, Domingos: 8am-3pm
 - **Impresión con Logo**: Recibos térmicos incluyen logo empresarial con estilos optimizados para impresión
 
 ### July 21, 2025 - Sistema de Facturación Mejorado con Vista Previa SAP

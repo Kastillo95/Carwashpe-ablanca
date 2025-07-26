@@ -8,8 +8,8 @@ export const BUSINESS_INFO = {
   whatsapp: "50494648987",
   rtn: "08011234567890",
   hours: {
-    weekdays: "Lunes a Viernes: 8:00 AM - 5:00 PM",
-    saturday: "Sábados: Cerrado",
+    weekdays: "Lunes a Sábado: 8:00 AM - 5:00 PM",
+    saturday: "",
     sunday: "Domingos: 8:00 AM - 3:00 PM"
   }
 };
