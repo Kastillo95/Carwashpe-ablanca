@@ -19,7 +19,7 @@ import { es } from "date-fns/locale";
 import { Customer, Promotion } from "@shared/schema";
 
 export default function CRM() {
-  const { isAdminMode, requestPassword } = useAuth();
+  const { isAdminMode, requestAdminPassword } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,7 +60,7 @@ export default function CRM() {
   // Crear promoción
   const createPromotionMutation = useMutation({
     mutationFn: async (data: any) => {
-      const password = await requestPassword();
+      const password = await requestAdminPassword();
       const response = await fetch('/api/crm/promotions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,10 +79,10 @@ export default function CRM() {
     }
   });
 
-  // Enviar promoción
+  // Enviar promoción con plantilla automática
   const sendPromotionMutation = useMutation({
     mutationFn: async ({ promotionId, sendToAll }: { promotionId: number; sendToAll: boolean }) => {
-      const password = await requestPassword();
+      const password = await requestAdminPassword();
       const response = await fetch(`/api/crm/promotions/${promotionId}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +96,32 @@ export default function CRM() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({ title: "Promoción enviada", description: data.message });
+      toast({ title: "¡Promoción enviada!", description: data.message });
+      
+      // Abrir automáticamente todos los enlaces de WhatsApp
+      if (data.sends && Array.isArray(data.sends)) {
+        // Abrir el primer enlace inmediatamente
+        if (data.sends.length > 0) {
+          window.open(data.sends[0].whatsappUrl, '_blank');
+        }
+        
+        // Si hay más de un cliente, mostrar confirmación para abrir todos
+        if (data.sends.length > 1) {
+          const openAll = confirm(
+            `¿Deseas abrir WhatsApp para todos los ${data.sends.length} clientes? Se abrirán ${data.sends.length} pestañas.`
+          );
+          
+          if (openAll) {
+            // Abrir con pequeño delay para evitar bloqueo del navegador
+            data.sends.slice(1).forEach((send: any, index: number) => {
+              setTimeout(() => {
+                window.open(send.whatsappUrl, '_blank');
+              }, (index + 1) * 500); // 500ms entre cada apertura
+            });
+          }
+        }
+      }
+      
       setSelectedCustomers([]);
     },
     onError: (error: any) => {
@@ -138,6 +163,44 @@ export default function CRM() {
     });
   };
 
+  const createQuickPromotion = (type: string) => {
+    const promotions = {
+      weekend: {
+        title: "Oferta de Fin de Semana",
+        message: "¡Aprovecha nuestros precios especiales de fin de semana! Lavado completo con cera incluida.",
+        discount: "15",
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 días
+      },
+      loyalty: {
+        title: "Cliente Preferencial",
+        message: "Como cliente frecuente, tienes descuento especial en todos nuestros servicios premium.",
+        discount: "20",
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 días
+      },
+      referral: {
+        title: "Trae un Amigo",
+        message: "¡Trae un amigo y ambos reciben descuento! Válido para cualquier servicio de lavado.",
+        discount: "25",
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 días
+      }
+    };
+
+    const promo = promotions[type as keyof typeof promotions];
+    if (promo) {
+      createPromotionMutation.mutate({
+        title: promo.title,
+        message: promo.message,
+        discount: promo.discount,
+        validFrom: promo.validFrom,
+        validUntil: promo.validUntil,
+        active: true
+      });
+    }
+  };
+
   const handleSendWhatsApp = (customer: Customer, message?: string) => {
     if (!customer.phone) {
       toast({ title: "Error", description: "Este cliente no tiene número de teléfono", variant: "destructive" });
@@ -156,10 +219,50 @@ export default function CRM() {
           <p className="text-muted-foreground">Administra clientes y promociones</p>
         </div>
         {isAdminMode && (
-          <Button onClick={() => setShowPromotionForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Promoción
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowPromotionForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Promoción
+            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline">
+                  Promociones Rápidas
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Crear Promoción Automática</h4>
+                  <div className="space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => createQuickPromotion('weekend')}
+                    >
+                      🌟 Oferta de Fin de Semana (15% desc.)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => createQuickPromotion('loyalty')}
+                    >
+                      👑 Cliente Preferencial (20% desc.)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => createQuickPromotion('referral')}
+                    >
+                      👥 Trae un Amigo (25% desc.)
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         )}
       </div>
 
@@ -338,10 +441,10 @@ export default function CRM() {
                                     promotionId: promotion.id, 
                                     sendToAll: false 
                                   })}
-                                  disabled={selectedCustomers.length === 0}
+                                  disabled={selectedCustomers.length === 0 || sendPromotionMutation.isPending}
                                 >
                                   <Send className="w-4 h-4 mr-1" />
-                                  Enviar a Seleccionados
+                                  {sendPromotionMutation.isPending ? "Enviando..." : `Enviar a ${selectedCustomers.length} Seleccionados`}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -349,9 +452,11 @@ export default function CRM() {
                                     promotionId: promotion.id, 
                                     sendToAll: true 
                                   })}
+                                  disabled={sendPromotionMutation.isPending}
+                                  className="bg-green-600 hover:bg-green-700"
                                 >
                                   <Send className="w-4 h-4 mr-1" />
-                                  Enviar a Todos
+                                  {sendPromotionMutation.isPending ? "Enviando..." : "Enviar a Todos (WhatsApp Automático)"}
                                 </Button>
                               </>
                             )}
@@ -408,43 +513,73 @@ export default function CRM() {
 
       {/* Modal para crear promoción */}
       <Dialog open={showPromotionForm} onOpenChange={setShowPromotionForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nueva Promoción</DialogTitle>
             <DialogDescription>
-              Crea una nueva promoción para enviar a tus clientes
+              Crea una nueva promoción para enviar a tus clientes. Se generará automáticamente una plantilla profesional con logo.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handlePromotionSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="title">Título</Label>
-              <Input id="title" name="title" required />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handlePromotionSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="title">Título</Label>
+                <Input id="title" name="title" required placeholder="Ej: Oferta Especial" />
+              </div>
+              <div>
+                <Label htmlFor="message">Mensaje</Label>
+                <Textarea id="message" name="message" required placeholder="Describe tu promoción..." />
+              </div>
+              <div>
+                <Label htmlFor="discount">Descuento (%) - Opcional</Label>
+                <Input id="discount" name="discount" type="number" min="0" max="100" placeholder="15" />
+              </div>
+              <div>
+                <Label htmlFor="validFrom">Válida desde</Label>
+                <Input id="validFrom" name="validFrom" type="date" required />
+              </div>
+              <div>
+                <Label htmlFor="validUntil">Válida hasta</Label>
+                <Input id="validUntil" name="validUntil" type="date" required />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowPromotionForm(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createPromotionMutation.isPending}>
+                  {createPromotionMutation.isPending ? "Creando..." : "Crear Promoción"}
+                </Button>
+              </div>
+            </form>
+            
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-3">Vista Previa del Mensaje WhatsApp:</h4>
+              <div className="bg-white p-3 rounded-lg border text-sm whitespace-pre-line font-mono">
+                🚗✨ CARWASH PEÑA BLANCA ✨🚗
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 *TU PROMOCIÓN* 🎉
+
+Tu mensaje de promoción aparecerá aquí...
+
+💰 *¡15% DE DESCUENTO!*
+
+📅 *Válida:* 26/7/2025 - 2/8/2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 *Ubicación:* Peña Blanca, Cortés
+📞 *Teléfono:* +504 9464-8987
+🕒 *Horarios:*
+   Lun-Sáb: 8:00 AM - 5:00 PM
+   Domingo: 8:00 AM - 3:00 PM
+
+¡Te esperamos para brindarte el mejor servicio! 🚗💨
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Esta plantilla se genera automáticamente con logo y información del negocio.
+              </p>
             </div>
-            <div>
-              <Label htmlFor="message">Mensaje</Label>
-              <Textarea id="message" name="message" required />
-            </div>
-            <div>
-              <Label htmlFor="discount">Descuento (%) - Opcional</Label>
-              <Input id="discount" name="discount" type="number" min="0" max="100" />
-            </div>
-            <div>
-              <Label htmlFor="validFrom">Válida desde</Label>
-              <Input id="validFrom" name="validFrom" type="date" required />
-            </div>
-            <div>
-              <Label htmlFor="validUntil">Válida hasta</Label>
-              <Input id="validUntil" name="validUntil" type="date" required />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowPromotionForm(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createPromotionMutation.isPending}>
-                {createPromotionMutation.isPending ? "Creando..." : "Crear Promoción"}
-              </Button>
-            </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

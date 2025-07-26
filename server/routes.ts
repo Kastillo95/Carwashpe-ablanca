@@ -481,7 +481,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         sentCount: sends.length,
-        message: `Promoción enviada a ${sends.length} clientes`
+        sends: sends, // Incluir enlaces de WhatsApp
+        message: `Promoción con plantilla automática enviada a ${sends.length} clientes`
       });
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Error al enviar promoción" });

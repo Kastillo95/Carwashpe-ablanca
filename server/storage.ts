@@ -619,8 +619,8 @@ export class DatabaseStorage implements IStorage {
           }
           
           // Only check and reduce stock for physical products (not services)
-          const isService = item.isService || item.is_service || item.name?.toLowerCase().includes('servicio');
-          console.log(`Item ${item.name}: isService=${item.isService}, is_service=${item.is_service}, calculated isService=${isService}`);
+          const isService = item.isService || item.name?.toLowerCase().includes('servicio');
+          console.log(`Item ${item.name}: isService=${item.isService}, calculated isService=${isService}`);
           
           if (!isService) {
             if ((item.quantity || 0) < inventoryItem.quantity) {
@@ -835,25 +835,91 @@ export class DatabaseStorage implements IStorage {
     ));
   }
   
-  // Promotion Sends
-  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<PromotionSend> {
-    const [newSend] = await db.insert(promotionSends).values({
+  // Crear plantilla automática profesional con logo
+  private createPromotionTemplate(promotion: Promotion): string {
+    const logoText = "🚗✨ CARWASH PEÑA BLANCA ✨🚗";
+    const separator = "━━━━━━━━━━━━━━━━━━━━━━━━━";
+    
+    let template = `${logoText}\n${separator}\n\n`;
+    template += `🎉 *${promotion.title.toUpperCase()}* 🎉\n\n`;
+    template += `${promotion.message}\n\n`;
+    
+    if (promotion.discount) {
+      template += `💰 *¡${promotion.discount}% DE DESCUENTO!*\n\n`;
+    }
+    
+    // Agregar fechas de validez
+    const validFrom = new Date(promotion.validFrom).toLocaleDateString('es-HN');
+    const validUntil = new Date(promotion.validUntil).toLocaleDateString('es-HN');
+    template += `📅 *Válida:* ${validFrom} - ${validUntil}\n\n`;
+    
+    template += `${separator}\n`;
+    template += `📍 *Ubicación:* Peña Blanca, Cortés\n`;
+    template += `📞 *Teléfono:* +504 9464-8987\n`;
+    template += `🕒 *Horarios:*\n`;
+    template += `   Lun-Sáb: 8:00 AM - 5:00 PM\n`;
+    template += `   Domingo: 8:00 AM - 3:00 PM\n\n`;
+    template += `¡Te esperamos para brindarte el mejor servicio! 🚗💨`;
+    
+    return template;
+  }
+
+  // Promotion Sends con plantillas automáticas
+  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<any> {
+    const customer = await this.getCustomer(customerId);
+    if (!customer || !customer.phone) {
+      throw new Error("Cliente no encontrado o sin teléfono");
+    }
+
+    // Obtener la promoción para crear la plantilla
+    const [promotion] = await db.select().from(promotions).where(eq(promotions.id, promotionId));
+    if (!promotion) {
+      throw new Error("Promoción no encontrada");
+    }
+
+    const promotionMessage = this.createPromotionTemplate(promotion);
+
+    // Crear enlace de WhatsApp con la plantilla
+    const cleanPhone = customer.phone.replace(/[^\d]/g, '');
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(promotionMessage)}`;
+
+    const [send] = await db.insert(promotionSends).values({
       promotionId,
       customerId,
       sentAt: new Date(),
       status: "sent"
     }).returning();
-    return newSend;
+
+    return { ...send, whatsappUrl, customerName: customer.name, phone: customer.phone };
   }
 
-  async sendPromotionToAllCustomers(promotionId: number): Promise<PromotionSend[]> {
+  async sendPromotionToAllCustomers(promotionId: number): Promise<any[]> {
     const allCustomers = await this.getCustomers();
+    const activeCustomers = allCustomers.filter(c => c.active && c.phone);
+    
+    // Obtener la promoción para crear la plantilla
+    const [promotion] = await db.select().from(promotions).where(eq(promotions.id, promotionId));
+    if (!promotion) {
+      throw new Error("Promoción no encontrada");
+    }
+    
+    const promotionMessage = this.createPromotionTemplate(promotion);
     const sends = [];
     
-    for (const customer of allCustomers) {
-      if (customer.phone) { // Solo enviar a clientes con teléfono
-        const send = await this.sendPromotionToCustomer(promotionId, customer.id);
-        sends.push(send);
+    for (const customer of activeCustomers) {
+      if (customer.phone) {
+        // Crear enlace de WhatsApp con la plantilla
+        const cleanPhone = customer.phone.replace(/[^\d]/g, '');
+        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(promotionMessage)}`;
+
+        const [send] = await db.insert(promotionSends).values({
+          promotionId,
+          customerId: customer.id,
+          sentAt: new Date(),
+          status: "sent"
+        }).returning();
+
+        sends.push({ ...send, whatsappUrl, customerName: customer.name, phone: customer.phone });
       }
     }
     
