@@ -325,7 +325,7 @@ export class MemStorage implements IStorage {
       subtotal: subtotal.toFixed(2),
       tax: tax.toFixed(2),
       total: total.toFixed(2),
-      status: "pending",
+      status: "paid",
       date: data.date,
       createdAt: new Date(),
     };
@@ -685,7 +685,7 @@ export class DatabaseStorage implements IStorage {
         subtotal: subtotal.toFixed(2),
         tax: tax.toFixed(2),
         total: total.toFixed(2),
-        status: "pending",
+        status: "paid",
         date: data.date,
       }).returning();
       

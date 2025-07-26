@@ -10,9 +10,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 26, 2025 - Tema Negro Fibra de Carbono + Sistema de Imágenes para Productos
+### July 26, 2025 - Tema Negro Fibra de Carbono + Facturas Directas Pagadas
+- **Facturas Status "Pagada"**: Cambiado sistema para crear facturas directamente como "Pagada" en lugar de "Pendiente"
 - **Tema Carbon Black**: Cambiado completamente color azul por negro tipo fibra de carbono en toda la interfaz
-- **Sistema de Imágenes**: Implementado sistema completo de imágenes para productos del inventario
+- **Sistema de Imágenes**: Implementado sistema completo de imágenes para productos del inventario  
 - **Upload de Imágenes**: Endpoint /api/upload/product-image para subir imágenes de productos
 - **Excel con Imágenes**: Importación Excel soporta columna "Imagen URL" para productos con imágenes
 - **Guía Visual**: Agregado botón "Guía con Imágenes" con instrucciones completas para usuarios
