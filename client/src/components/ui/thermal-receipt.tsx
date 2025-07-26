@@ -82,6 +82,12 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
               <span>{invoice.customerPhone}</span>
             </div>
           )}
+          {invoice?.customerTaxId && (
+            <div className="flex justify-between">
+              <span>RTN:</span>
+              <span>{invoice.customerTaxId}</span>
+            </div>
+          )}
         </div>
 
         {/* Separator */}
