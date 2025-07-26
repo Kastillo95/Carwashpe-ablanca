@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ProductForm } from "@/components/forms/product-form";
+import { ExcelInstructions } from "@/components/ui/dialog-instructions";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { 
@@ -16,7 +17,8 @@ import {
   CheckCircle,
   Download,
   Upload,
-  FileSpreadsheet
+  FileSpreadsheet,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +35,7 @@ export default function InventoryPage() {
   const [editingProduct, setEditingProduct] = useState<Inventory | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: inventory, isLoading } = useQuery<Inventory[]>({
@@ -95,6 +98,7 @@ export default function InventoryPage() {
       'Cantidad': item.quantity,
       'Código de Barras': item.barcode,
       'Proveedor': item.supplier || '',
+      'Imagen URL': item.imageUrl || '',
       'Es Servicio': item.isService ? 'Sí' : 'No',
       'Activo': item.active ? 'Sí' : 'No'
     }));
@@ -112,6 +116,7 @@ export default function InventoryPage() {
       { wch: 10 },  // Cantidad
       { wch: 15 },  // Código de Barras
       { wch: 20 },  // Proveedor
+      { wch: 25 },  // Imagen URL
       { wch: 12 },  // Es Servicio
       { wch: 8 }    // Activo
     ];
@@ -148,6 +153,7 @@ export default function InventoryPage() {
         quantity: parseInt(row['Cantidad'] || row['quantity'] || '0'),
         barcode: row['Código de Barras'] || row['barcode'] || '',
         supplier: row['Proveedor'] || row['supplier'] || '',
+        imageUrl: row['Imagen URL'] || row['imageUrl'] || row['image_url'] || null,
         isService: (row['Es Servicio'] || row['isService']) === 'Sí' || (row['Es Servicio'] || row['isService']) === true,
         active: (row['Activo'] || row['active']) !== 'No' && (row['Activo'] || row['active']) !== false
       }));
@@ -294,6 +300,14 @@ export default function InventoryPage() {
           {isAdminMode && (
             <>
               <Button 
+                onClick={() => setShowInstructions(true)}
+                variant="outline"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Guía con Imágenes
+              </Button>
+              <Button 
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 disabled={isImporting}
@@ -320,6 +334,12 @@ export default function InventoryPage() {
         onChange={handleImportFromExcel}
         style={{ display: 'none' }}
       />
+      
+      {/* Excel Instructions Dialog */}
+      <ExcelInstructions 
+        open={showInstructions} 
+        onOpenChange={setShowInstructions} 
+      />
       </div>
 
       {/* Inventory Grid */}
@@ -341,6 +361,21 @@ export default function InventoryPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {/* Imagen del producto */}
+                  {item.imageUrl && (
+                    <div className="flex justify-center mb-3">
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.name}
+                        className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {item.description && (
                     <p className="text-sm text-gray-600">{item.description}</p>
                   )}

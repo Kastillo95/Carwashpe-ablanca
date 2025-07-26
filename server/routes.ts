@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertAppointmentSchema, insertInventorySchema, insertServiceSchema } from "@shared/schema";
 import { z } from "zod";
+import { uploadProductImage, uploadsDir } from "./upload";
+import path from "path";
+import express from "express";
 
 const ADMIN_PASSWORD = "742211010338";
 
@@ -35,6 +38,23 @@ function validateAdmin(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Servir archivos estáticos de uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
+  // Upload de imágenes de productos
+  app.post("/api/upload/product-image", uploadProductImage.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No se subió ningún archivo" });
+      }
+      
+      const imageUrl = `/uploads/products/${req.file.filename}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      res.status(500).json({ message: "Error al subir imagen" });
+    }
+  });
   
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {

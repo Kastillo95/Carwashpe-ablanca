@@ -49,6 +49,7 @@ export const inventory = pgTable("inventory", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   supplier: text("supplier"),
   category: text("category"),
+  imageUrl: text("image_url"), // URL de la imagen del producto
   isService: boolean("is_service").default(false), // True para servicios como lavados
   active: boolean("active").default(true),
 });
@@ -113,6 +114,7 @@ export const insertInventorySchema = createInsertSchema(inventory).omit({ id: tr
   description: z.string().nullable().optional(),
   supplier: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(), // URL de la imagen del producto
   price: z.union([z.string(), z.number()]).transform(val => String(val)), // Acepta número o string
 });
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({ 

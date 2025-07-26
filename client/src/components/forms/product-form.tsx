@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUpload } from "@/components/forms/image-upload";
 import { Package, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -23,6 +24,7 @@ const productSchema = z.object({
   price: z.number().min(0.01, "El precio debe ser mayor a 0"),
   supplier: z.string().optional(),
   category: z.string().optional(),
+  imageUrl: z.string().optional(),
   isService: z.boolean().default(false),
   active: z.boolean().default(true),
 });
@@ -36,6 +38,7 @@ interface ProductFormProps {
 
 export function ProductForm({ product, onCancel }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(product?.imageUrl || null);
   const { toast } = useToast();
   const isEdit = !!product;
 
@@ -50,6 +53,7 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
       price: parseFloat(String(product?.price)) || 0,
       supplier: product?.supplier || "",
       category: product?.category || "",
+      imageUrl: product?.imageUrl || "",
       isService: product?.isService || false,
       active: product?.active ?? true,
     },
@@ -63,6 +67,7 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
     try {
       const productData = {
         ...data,
+        imageUrl: imageUrl || null,
         password: ADMIN_PASSWORD,
       };
 
@@ -227,6 +232,15 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
                 id="description"
                 placeholder="Descripción del producto..."
                 {...form.register("description")}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Image Upload Section */}
+            <div className="md:col-span-2">
+              <ImageUpload
+                currentImageUrl={imageUrl}
+                onImageChange={setImageUrl}
                 disabled={isLoading}
               />
             </div>
