@@ -16,6 +16,7 @@ import InventoryPage from "@/pages/inventory";
 import Billing from "@/pages/billing";
 import Reports from "@/pages/reports";
 import Contact from "@/pages/contact";
+import CRM from "@/pages/crm";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -33,6 +34,7 @@ function AppContent() {
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/billing" component={Billing} />
             <Route path="/reports" component={Reports} />
+            <Route path="/crm" component={CRM} />
             <Route path="/contact" component={Contact} />
             <Route component={NotFound} />
           </Switch>

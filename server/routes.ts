@@ -397,6 +397,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CRM - Customers Enhanced
+  app.get("/api/crm/customers", async (req, res) => {
+    try {
+      const { query } = req.query;
+      let customers;
+      
+      if (query && typeof query === 'string') {
+        customers = await storage.searchCustomers(query);
+      } else {
+        customers = await storage.getCustomers();
+      }
+      
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener clientes" });
+    }
+  });
+
+  app.get("/api/crm/customers/top", async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const customers = await storage.getTopCustomers(limit ? parseInt(limit as string) : 10);
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener mejores clientes" });
+    }
+  });
+
+  // CRM - Promotions
+  app.get("/api/crm/promotions", async (req, res) => {
+    try {
+      const promotions = await storage.getPromotions();
+      res.json(promotions);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener promociones" });
+    }
+  });
+
+  app.post("/api/crm/promotions", async (req, res) => {
+    try {
+      const { password, ...promotionData } = req.body;
+      if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Contraseña incorrecta" });
+      }
+      
+      // Validar datos de promoción
+      const validatedData = {
+        title: promotionData.title,
+        message: promotionData.message,
+        discount: promotionData.discount ? promotionData.discount.toString() : null,
+        validFrom: new Date(promotionData.validFrom),
+        validUntil: new Date(promotionData.validUntil),
+        active: promotionData.active !== false
+      };
+      
+      const promotion = await storage.createPromotion(validatedData);
+      res.json(promotion);
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : "Error al crear promoción" });
+    }
+  });
+
+  app.post("/api/crm/promotions/:id/send", async (req, res) => {
+    try {
+      const { password, sendToAll, customerIds } = req.body;
+      if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Contraseña incorrecta" });
+      }
+      
+      const promotionId = parseInt(req.params.id);
+      let sends = [];
+      
+      if (sendToAll) {
+        sends = await storage.sendPromotionToAllCustomers(promotionId);
+      } else if (customerIds && Array.isArray(customerIds)) {
+        for (const customerId of customerIds) {
+          const send = await storage.sendPromotionToCustomer(promotionId, customerId);
+          sends.push(send);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        sentCount: sends.length,
+        message: `Promoción enviada a ${sends.length} clientes`
+      });
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : "Error al enviar promoción" });
+    }
+  });
+
+  app.get("/api/crm/promotions/:id/sends", async (req, res) => {
+    try {
+      const promotionId = parseInt(req.params.id);
+      const sends = await storage.getPromotionSends(promotionId);
+      res.json(sends);
+    } catch (error) {
+      res.status(500).json({ message: "Error al obtener envíos de promoción" });
+    }
+  });
+
+  // WhatsApp Integration
+  app.post("/api/whatsapp/send", async (req, res) => {
+    try {
+      const { phone, message } = req.body;
+      
+      if (!phone || !message) {
+        return res.status(400).json({ message: "Teléfono y mensaje son requeridos" });
+      }
+      
+      // Crear enlace de WhatsApp
+      const cleanPhone = phone.replace(/[^\d]/g, '');
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+      
+      res.json({ 
+        success: true, 
+        whatsappUrl,
+        message: "Enlace de WhatsApp generado exitosamente"
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Error al generar enlace de WhatsApp" });
+    }
+  });
+
   // Admin validation endpoint
   app.post("/api/admin/validate", async (req, res) => {
     try {

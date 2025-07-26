@@ -4,6 +4,7 @@ import {
   FileText, 
   BarChart3, 
   Phone, 
+  Users,
   LayoutDashboard 
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -16,6 +17,7 @@ const navigation = [
   { name: "Citas", href: "/appointments", icon: Calendar, adminOnly: true },
   { name: "Inventario", href: "/inventory", icon: Package, adminOnly: true },
   { name: "Facturación", href: "/billing", icon: FileText, adminOnly: false },
+  { name: "CRM - Clientes", href: "/crm", icon: Users, adminOnly: false },
   { name: "Reportes", href: "/reports", icon: BarChart3, adminOnly: true },
   { name: "Contacto", href: "/contact", icon: Phone, adminOnly: false },
 ];

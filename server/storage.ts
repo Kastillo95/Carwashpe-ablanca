@@ -1,8 +1,9 @@
 import { 
-  Service, Customer, Appointment, Inventory, Invoice, InvoiceItem,
+  Service, Customer, Appointment, Inventory, Invoice, InvoiceItem, Promotion, PromotionSend,
   InsertService, InsertCustomer, InsertAppointment, InsertInventory, 
-  InsertInvoice, InsertInvoiceItem, CreateInvoiceData, DashboardStats, ReportData,
-  services, customers, appointments, inventory, invoices, invoiceItems
+  InsertInvoice, InsertInvoiceItem, InsertPromotion, InsertPromotionSend,
+  CreateInvoiceData, DashboardStats, ReportData,
+  services, customers, appointments, inventory, invoices, invoiceItems, promotions, promotionSends
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
@@ -15,11 +16,15 @@ export interface IStorage {
   updateService(id: number, service: Partial<InsertService>): Promise<Service>;
   deleteService(id: number): Promise<void>;
 
-  // Customers
+  // Customers - CRM
   getCustomers(): Promise<Customer[]>;
   getCustomer(id: number): Promise<Customer | undefined>;
+  getCustomerByPhone(phone: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer>;
+  searchCustomers(query: string): Promise<Customer[]>;
+  getTopCustomers(limit?: number): Promise<Customer[]>;
+  updateCustomerSpent(customerId: number, amount: number): Promise<void>;
 
   // Appointments
   getAppointments(): Promise<Appointment[]>;
@@ -49,6 +54,19 @@ export interface IStorage {
   // Reports
   getDashboardStats(): Promise<DashboardStats>;
   getReportData(startDate: string, endDate: string): Promise<ReportData>;
+
+  // Promotions - CRM
+  getPromotions(): Promise<Promotion[]>;
+  getPromotion(id: number): Promise<Promotion | undefined>;
+  createPromotion(promotion: InsertPromotion): Promise<Promotion>;
+  updatePromotion(id: number, promotion: Partial<InsertPromotion>): Promise<Promotion>;
+  deletePromotion(id: number): Promise<void>;
+  getActivePromotions(): Promise<Promotion[]>;
+  
+  // Promotion Sends
+  sendPromotionToCustomer(promotionId: number, customerId: number): Promise<PromotionSend>;
+  sendPromotionToAllCustomers(promotionId: number): Promise<PromotionSend[]>;
+  getPromotionSends(promotionId: number): Promise<PromotionSend[]>;
 
   // Helper methods
   getNextServiceNumber(): Promise<number>;
@@ -433,9 +451,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(services).where(eq(services.id, id));
   }
 
-  // Customers
+  // Customers - CRM
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers);
+    return await db.select().from(customers).orderBy(customers.lastVisit);
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
@@ -443,8 +461,17 @@ export class DatabaseStorage implements IStorage {
     return customer || undefined;
   }
 
+  async getCustomerByPhone(phone: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.phone, phone));
+    return customer || undefined;
+  }
+
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values(customer).returning();
+    const [newCustomer] = await db.insert(customers).values({
+      ...customer,
+      createdAt: new Date(),
+      lastVisit: new Date()
+    }).returning();
     return newCustomer;
   }
 
@@ -452,6 +479,27 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
     if (!updated) throw new Error("Customer not found");
     return updated;
+  }
+
+  async searchCustomers(query: string): Promise<Customer[]> {
+    return await db.select().from(customers).where(
+      sql`${customers.name} ILIKE ${`%${query}%`} OR ${customers.phone} ILIKE ${`%${query}%`} OR ${customers.email} ILIKE ${`%${query}%`}`
+    );
+  }
+
+  async getTopCustomers(limit = 10): Promise<Customer[]> {
+    return await db.select().from(customers)
+      .orderBy(sql`${customers.totalSpent} DESC`)
+      .limit(limit);
+  }
+
+  async updateCustomerSpent(customerId: number, amount: number): Promise<void> {
+    await db.update(customers)
+      .set({ 
+        totalSpent: sql`${customers.totalSpent} + ${amount}`,
+        lastVisit: new Date()
+      })
+      .where(eq(customers.id, customerId));
   }
 
   // Appointments
@@ -596,9 +644,41 @@ export class DatabaseStorage implements IStorage {
       const tax = 0; // No mostrar impuestos
       const total = subtotal;
       
+      // CRM: Buscar o crear cliente automáticamente
+      let customerId = null;
+      if (data.customer.phone) {
+        let existingCustomer = await this.getCustomerByPhone(data.customer.phone);
+        
+        if (existingCustomer) {
+          // Actualizar información del cliente existente
+          await tx.update(customers).set({
+            name: data.customer.name,
+            lastVisit: new Date(),
+            totalSpent: sql`${customers.totalSpent} + ${total}`
+          }).where(eq(customers.id, existingCustomer.id));
+          customerId = existingCustomer.id;
+        } else {
+          // Crear nuevo cliente
+          const [newCustomer] = await tx.insert(customers).values({
+            name: data.customer.name,
+            phone: data.customer.phone,
+            email: null,
+            taxId: data.customer.taxId || null,
+            address: null,
+            notes: "Cliente creado automáticamente desde facturación",
+            totalSpent: total.toFixed(2),
+            lastVisit: new Date(),
+            createdAt: new Date(),
+            active: true
+          }).returning();
+          customerId = newCustomer.id;
+        }
+      }
+      
       // Create invoice
       const [invoice] = await tx.insert(invoices).values({
         number: invoiceNumber,
+        customerId,
         customerName: data.customer.name,
         customerPhone: data.customer.phone || null,
         customerTaxId: data.customer.taxId || null,
@@ -716,6 +796,72 @@ export class DatabaseStorage implements IStorage {
       topService: topServiceResult?.serviceName || "N/A",
       period: `${startDate} - ${endDate}`,
     };
+  }
+
+  // Promotions - CRM
+  async getPromotions(): Promise<Promotion[]> {
+    return await db.select().from(promotions).orderBy(sql`${promotions.createdAt} DESC`);
+  }
+
+  async getPromotion(id: number): Promise<Promotion | undefined> {
+    const [promotion] = await db.select().from(promotions).where(eq(promotions.id, id));
+    return promotion || undefined;
+  }
+
+  async createPromotion(promotion: InsertPromotion): Promise<Promotion> {
+    const [newPromotion] = await db.insert(promotions).values({
+      ...promotion,
+      createdAt: new Date()
+    }).returning();
+    return newPromotion;
+  }
+
+  async updatePromotion(id: number, promotion: Partial<InsertPromotion>): Promise<Promotion> {
+    const [updated] = await db.update(promotions).set(promotion).where(eq(promotions.id, id)).returning();
+    if (!updated) throw new Error("Promotion not found");
+    return updated;
+  }
+
+  async deletePromotion(id: number): Promise<void> {
+    await db.delete(promotions).where(eq(promotions.id, id));
+  }
+
+  async getActivePromotions(): Promise<Promotion[]> {
+    const now = new Date();
+    return await db.select().from(promotions).where(and(
+      eq(promotions.active, true),
+      lte(promotions.validFrom, now),
+      gte(promotions.validUntil, now)
+    ));
+  }
+  
+  // Promotion Sends
+  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<PromotionSend> {
+    const [newSend] = await db.insert(promotionSends).values({
+      promotionId,
+      customerId,
+      sentAt: new Date(),
+      status: "sent"
+    }).returning();
+    return newSend;
+  }
+
+  async sendPromotionToAllCustomers(promotionId: number): Promise<PromotionSend[]> {
+    const allCustomers = await this.getCustomers();
+    const sends = [];
+    
+    for (const customer of allCustomers) {
+      if (customer.phone) { // Solo enviar a clientes con teléfono
+        const send = await this.sendPromotionToCustomer(promotionId, customer.id);
+        sends.push(send);
+      }
+    }
+    
+    return sends;
+  }
+
+  async getPromotionSends(promotionId: number): Promise<PromotionSend[]> {
+    return await db.select().from(promotionSends).where(eq(promotionSends.promotionId, promotionId));
   }
 }
 

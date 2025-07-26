@@ -10,7 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 26, 2025 - Migración Completa a Replit Estándar y Sistema de Impresión Térmica Mejorado
+### July 26, 2025 - Sistema CRM Completo con WhatsApp y Gestión Automática de Clientes
+- **Sistema CRM Completo**: Implementado módulo CRM con gestión automática de clientes desde facturación
+- **Gestión Automática**: Los clientes se guardan automáticamente al crear facturas, actualizando datos existentes
+- **WhatsApp Integration**: Sistema de envío de promociones masivas y mensajes individuales vía WhatsApp
+- **Gestión de Promociones**: Creación, gestión y envío de promociones con fechas de validez y descuentos
+- **Búsqueda Avanzada**: Sistema de búsqueda de clientes por nombre, teléfono o email
+- **Analíticas CRM**: Mejores clientes, estadísticas de gastos y análisis de comportamiento
+- **Base de Datos Expandida**: Nuevas tablas para customers, promotions y promotion_sends
 - **Migración Completa**: Sistema migrado exitosamente de Replit Agent a ambiente estándar de Replit
 - **Configuración PostgreSQL**: Actualizada configuración de base de datos de Neon a PostgreSQL local de Replit
 - **Optimización de Impresión Térmica**: Sistema completo de impresión con formato térmico mejorado, incluyendo logo
