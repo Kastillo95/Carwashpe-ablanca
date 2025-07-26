@@ -8,9 +8,9 @@ export const BUSINESS_INFO = {
   whatsapp: "50494648987",
   rtn: "08011234567890",
   hours: {
-    weekdays: "Lunes a Viernes: 8:00 AM - 6:00 PM",
-    saturday: "Sábados: 8:00 AM - 4:00 PM",
-    sunday: "Domingos: Cerrado"
+    weekdays: "Lunes a Viernes: 8:00 AM - 5:00 PM",
+    saturday: "Sábados: Cerrado",
+    sunday: "Domingos: 8:00 AM - 3:00 PM"
   }
 };
 
@@ -24,6 +24,10 @@ export const SERVICES = {
 
 export const TIME_SLOTS = [
   "08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"
+];
+
+export const SUNDAY_TIME_SLOTS = [
+  "08:00", "09:00", "10:00", "11:00", "14:00", "15:00"
 ];
 
 export const CURRENCY = "L.";
