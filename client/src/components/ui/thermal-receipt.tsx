@@ -48,6 +48,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
           <div className="text-xs">{BUSINESS_INFO.address}</div>
           <div className="text-xs">{BUSINESS_INFO.addressDetail}</div>
           <div className="text-xs">Tel: {BUSINESS_INFO.phone}</div>
+          <div className="text-xs">RTN: {BUSINESS_INFO.rtn}</div>
         </div>
 
         {/* Separator */}
@@ -122,7 +123,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         <div className="text-center text-xs">
           <div className="mb-1">¡Gracias por su preferencia!</div>
           <div className="mb-1">{BUSINESS_INFO.hours.weekdays}</div>
-          <div className="mb-1">{BUSINESS_INFO.hours.saturday}</div>
+          <div className="mb-1">{BUSINESS_INFO.hours.sunday}</div>
           <div className="mb-2">CAI: 123456-654321-123456-12</div>
           <div className="text-xs text-gray-600">
             Rango autorizado: 001-0001 al 001-5000

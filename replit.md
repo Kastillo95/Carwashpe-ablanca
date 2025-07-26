@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 26, 2025 - Migración Final Completa + RTN en Facturas
+- **Migración 100% Exitosa**: Sistema migrado completamente de Replit Agent a Replit estándar
+- **RTN en Facturas**: Agregado RTN (08011234567890) visible en todos los recibos térmicos
+- **Horarios Actualizados**: Facturas muestran horarios correctos: Lunes a Sábado 8am-5pm, Domingos 8am-3pm
+- **Base de Datos PostgreSQL**: Sistema funcionando perfectamente con PostgreSQL local de Replit
+- **Aplicación Completamente Funcional**: Dashboard, inventario, facturación, CRM y reportes operativos
+
 ### July 26, 2025 - Tema Negro Fibra de Carbono + Facturas Directas Pagadas
 - **Facturas Status "Pagada"**: Cambiado sistema para crear facturas directamente como "Pagada" en lugar de "Pendiente"
 - **Tema Carbon Black**: Cambiado completamente color azul por negro tipo fibra de carbono en toda la interfaz
