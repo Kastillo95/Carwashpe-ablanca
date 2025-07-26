@@ -760,7 +760,7 @@ export function QuickInvoiceForm() {
               <div className="flex gap-2 no-print">
                 <Button
                   onClick={handlePrintReceipt}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-1 bg-gray-800 hover:bg-gray-900 text-white"
                   disabled={!lastCreatedInvoice?.invoice}
                 >
                   <Printer className="w-4 h-4 mr-2" />

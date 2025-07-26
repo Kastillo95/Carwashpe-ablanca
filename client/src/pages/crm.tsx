@@ -333,7 +333,7 @@ export default function CRM() {
               <CardTitle>Lista de Clientes</CardTitle>
               <CardDescription>
                 {selectedCustomers.length > 0 && (
-                  <span className="text-blue-600">
+                  <span className="text-gray-800">
                     {selectedCustomers.length} cliente(s) seleccionado(s)
                   </span>
                 )}

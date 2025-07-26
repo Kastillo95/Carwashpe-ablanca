@@ -10,7 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### July 26, 2025 - Migración Exitosa y Sistema CRM Funcionando
+### July 26, 2025 - Tema Negro Fibra de Carbono + Sistema de Imágenes para Productos
+- **Tema Carbon Black**: Cambiado completamente color azul por negro tipo fibra de carbono en toda la interfaz
+- **Sistema de Imágenes**: Implementado sistema completo de imágenes para productos del inventario
+- **Upload de Imágenes**: Endpoint /api/upload/product-image para subir imágenes de productos
+- **Excel con Imágenes**: Importación Excel soporta columna "Imagen URL" para productos con imágenes
+- **Guía Visual**: Agregado botón "Guía con Imágenes" con instrucciones completas para usuarios
+- **Vista de Productos**: Las tarjetas de inventario ahora muestran imágenes junto con descripción y precio
 - **Migración Completa Exitosa**: Sistema migrado de Replit Agent a Replit estándar sin problemas
 - **CRM Automático Confirmado**: Sistema guarda clientes automáticamente desde facturas funciona correctamente
 - **Base de Datos PostgreSQL**: Configurada correctamente, todos los datos persisten en la base de datos

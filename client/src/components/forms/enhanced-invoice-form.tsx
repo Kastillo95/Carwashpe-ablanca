@@ -437,7 +437,7 @@ export function EnhancedInvoiceForm() {
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
                     <span>Total:</span>
-                    <span className="text-blue-600">{formatCurrency(totals.total)}</span>
+                    <span className="text-gray-800">{formatCurrency(totals.total)}</span>
                   </div>
                 </div>
               </div>
@@ -448,7 +448,7 @@ export function EnhancedInvoiceForm() {
               <Button 
                 type="submit" 
                 disabled={isLoading} 
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gray-800 hover:bg-gray-900"
               >
                 {isLoading ? "Generando..." : "Guardar Factura"}
               </Button>
@@ -485,7 +485,7 @@ export function EnhancedInvoiceForm() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-50 p-4 rounded-lg border-2 border-blue-200 min-h-[600px]">
+          <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300 min-h-[600px]">
             <div className="max-w-sm mx-auto">
               <ThermalReceipt 
                 ref={receiptRef}
@@ -498,7 +498,7 @@ export function EnhancedInvoiceForm() {
               <Button
                 onClick={handlePrint}
                 variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                className="border-gray-400 text-gray-900 hover:bg-gray-100"
                 disabled={!lastCreatedInvoice?.invoice?.customerName || lastCreatedInvoice?.invoice?.customerName === "Cliente"}
               >
                 <Printer className="w-4 h-4 mr-2" />

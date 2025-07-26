@@ -116,7 +116,7 @@ export default function Appointments() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-brand-blue rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-brand-carbon rounded-full flex items-center justify-center">
                       <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -182,7 +182,7 @@ export default function Appointments() {
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-brand-blue rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-brand-carbon rounded-full flex items-center justify-center">
                         <User className="w-6 h-6 text-white" />
                       </div>
                       <div>

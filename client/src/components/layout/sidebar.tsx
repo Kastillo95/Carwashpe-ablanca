@@ -43,7 +43,7 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors cursor-pointer",
                   isActive
-                    ? "bg-brand-blue text-white"
+                    ? "bg-brand-carbon text-white"
                     : "text-gray-700 hover:bg-gray-100"
                 )}
               >

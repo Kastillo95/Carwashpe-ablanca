@@ -346,7 +346,7 @@ export function InvoiceForm() {
             <Button 
               type="submit" 
               disabled={isLoading} 
-              className="bg-brand-blue hover:bg-blue-800"
+              className="bg-brand-carbon hover:bg-gray-800"
             >
               {isLoading ? "Generando..." : "Guardar Factura"}
             </Button>
@@ -385,11 +385,11 @@ export function InvoiceForm() {
           {showPreview && (
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center gap-2 mb-4">
-                <ArrowDown className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-blue-800">Vista Previa de Factura (Estilo SAP)</h3>
+                <ArrowDown className="w-5 h-5 text-gray-800" />
+                <h3 className="text-lg font-semibold text-gray-900">Vista Previa de Factura (Estilo SAP)</h3>
               </div>
               
-              <div className="bg-gray-50 p-6 rounded-lg border-2 border-blue-200">
+              <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-300">
                 <div className="max-w-sm mx-auto">
                   <ThermalReceipt 
                     ref={receiptRef}
@@ -401,7 +401,7 @@ export function InvoiceForm() {
                 <div className="flex justify-center gap-3 mt-4 pt-4 border-t">
                   <Button
                     onClick={handlePrint}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-gray-800 hover:bg-gray-900 text-white"
                   >
                     <Printer className="w-4 h-4 mr-2" />
                     Imprimir Vista Previa

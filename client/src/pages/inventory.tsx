@@ -302,7 +302,7 @@ export default function InventoryPage() {
               <Button 
                 onClick={() => setShowInstructions(true)}
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                className="text-gray-900 border-gray-900 hover:bg-gray-50"
               >
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Guía con Imágenes
@@ -317,7 +317,7 @@ export default function InventoryPage() {
               </Button>
               <Button
                 onClick={handleAddProduct}
-                className="bg-brand-blue hover:bg-blue-800"
+                className="bg-brand-carbon hover:bg-gray-800"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Producto
@@ -392,7 +392,7 @@ export default function InventoryPage() {
                     
                     <div className="flex justify-between">
                       <span className="text-gray-600">Precio:</span>
-                      <span className="font-medium">{formatCurrency(parseFloat(item.price))}</span>
+                      <span className="font-medium text-brand-carbon">{formatCurrency(parseFloat(item.price))}</span>
                     </div>
                     
                     {item.supplier && (
@@ -452,7 +452,7 @@ export default function InventoryPage() {
                 Comienza agregando productos para gestionar tu inventario.
               </p>
               {isAdminMode && (
-                <Button onClick={handleAddProduct} className="bg-brand-blue hover:bg-blue-800">
+                <Button onClick={handleAddProduct} className="bg-brand-carbon hover:bg-gray-800">
                   <Plus className="w-4 h-4 mr-2" />
                   Agregar Primer Producto
                 </Button>

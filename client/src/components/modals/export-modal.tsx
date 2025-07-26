@@ -122,7 +122,7 @@ export function ExportModal({ open, onOpenChange, exportType }: ExportModalProps
             <Button
               type="submit"
               disabled={isLoading || !password}
-              className="flex-1 bg-brand-blue hover:bg-blue-800"
+              className="flex-1 bg-brand-carbon hover:bg-gray-800"
             >
               <Download className="w-4 h-4 mr-2" />
               {isLoading ? "Exportando..." : "Exportar"}

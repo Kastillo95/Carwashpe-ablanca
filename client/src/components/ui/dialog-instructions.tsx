@@ -59,7 +59,7 @@ export function ExcelInstructions({ open, onOpenChange }: ExcelInstructionsProps
           {/* Paso 1: Preparar imágenes */}
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-3 text-blue-600">📸 Paso 1: Preparar las Imágenes</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">📸 Paso 1: Preparar las Imágenes</h3>
               <div className="space-y-3">
                 <p><strong>Opciones para agregar imágenes:</strong></p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -93,7 +93,7 @@ export function ExcelInstructions({ open, onOpenChange }: ExcelInstructionsProps
                     <div>• Activo</div>
                   </div>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="bg-gray-100 p-3 rounded-lg border border-gray-300">
                   <p className="text-sm"><strong>🔗 Para la columna "Imagen URL":</strong> Pega la URL completa de la imagen (ej: https://i.imgur.com/abc123.jpg)</p>
                 </div>
               </div>
@@ -119,13 +119,13 @@ export function ExcelInstructions({ open, onOpenChange }: ExcelInstructionsProps
                       <td className="border border-gray-300 p-2">Champú Auto</td>
                       <td className="border border-gray-300 p-2">Champú premium para autos</td>
                       <td className="border border-gray-300 p-2">45.50</td>
-                      <td className="border border-gray-300 p-2 text-blue-600 underline">https://i.imgur.com/ejemplo.jpg</td>
+                      <td className="border border-gray-300 p-2 text-gray-800 underline">https://i.imgur.com/ejemplo.jpg</td>
                     </tr>
                     <tr>
                       <td className="border border-gray-300 p-2">Cera Protectora</td>
                       <td className="border border-gray-300 p-2">Cera líquida de larga duración</td>
                       <td className="border border-gray-300 p-2">75.00</td>
-                      <td className="border border-gray-300 p-2 text-blue-600 underline">https://i.imgur.com/cera123.png</td>
+                      <td className="border border-gray-300 p-2 text-gray-800 underline">https://i.imgur.com/cera123.png</td>
                     </tr>
                   </tbody>
                 </table>

@@ -31,13 +31,13 @@ export default function Contact() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Car className="w-5 h-5 text-brand-blue" />
+              <Car className="w-5 h-5 text-brand-carbon" />
               {BUSINESS_INFO.name}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-brand-blue rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-brand-carbon rounded-full flex items-center justify-center flex-shrink-0">
                 <MapPin className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -94,7 +94,7 @@ export default function Contact() {
               {Object.entries(SERVICES).map(([key, service]) => (
                 <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-brand-blue rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-brand-carbon rounded-full flex items-center justify-center">
                       <Star className="w-4 h-4 text-white" />
                     </div>
                     <span className="font-medium text-gray-800">{service.name}</span>
@@ -155,7 +155,7 @@ export default function Contact() {
       </div>
 
       {/* Call to Action */}
-      <Card className="bg-brand-blue text-white">
+      <Card className="bg-brand-carbon text-white">
         <CardContent className="pt-6">
           <div className="text-center space-y-4">
             <h3 className="text-2xl font-bold">¿Listo para darle el mejor cuidado a tu vehículo?</h3>

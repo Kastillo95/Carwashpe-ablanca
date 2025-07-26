@@ -250,7 +250,7 @@ export function ProductForm({ product, onCancel }: ProductFormProps) {
             <Button 
               type="submit" 
               disabled={isLoading} 
-              className="bg-brand-blue hover:bg-blue-800"
+              className="bg-brand-carbon hover:bg-gray-800"
             >
               <Save className="w-4 h-4 mr-2" />
               {isLoading ? "Guardando..." : (isEdit ? "Actualizar" : "Crear")}

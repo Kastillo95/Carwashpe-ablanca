@@ -48,8 +48,8 @@ export default function Dashboard() {
       title: "Citas Hoy",
       value: stats?.todayAppointments || 0,
       icon: Calendar,
-      color: "bg-blue-100 text-blue-600",
-      bgColor: "bg-blue-500"
+      color: "bg-gray-100 text-gray-800",
+      bgColor: "bg-gray-800"
     },
     {
       title: "Ingresos del Día",
@@ -111,7 +111,7 @@ export default function Dashboard() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-brand-blue rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-brand-carbon rounded-full flex items-center justify-center">
                 <CalendarCheck className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">

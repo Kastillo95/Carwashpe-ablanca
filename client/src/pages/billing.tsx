@@ -200,7 +200,7 @@ export default function Billing() {
           </div>
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-gray-800 hover:bg-gray-900 text-white"
           >
             <FileText className="w-4 h-4 mr-2" />
             Nueva Factura
@@ -309,7 +309,7 @@ export default function Billing() {
         </div>
         <Button
           onClick={() => setShowForm(true)}
-          className="bg-brand-blue hover:bg-blue-800"
+          className="bg-brand-carbon hover:bg-gray-800"
         >
           <FileText className="w-4 h-4 mr-2" />
           Nueva Factura
@@ -331,7 +331,7 @@ export default function Billing() {
               <p className="text-gray-600 mb-4">
                 Comienza creando tu primera factura.
               </p>
-              <Button onClick={() => setShowForm(true)} className="bg-brand-blue hover:bg-blue-800">
+              <Button onClick={() => setShowForm(true)} className="bg-brand-carbon hover:bg-gray-800">
                 <FileText className="w-4 h-4 mr-2" />
                 Crear Primera Factura
               </Button>

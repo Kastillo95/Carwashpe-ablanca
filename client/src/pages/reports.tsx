@@ -337,7 +337,7 @@ export default function Reports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Servicios Prestados</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-gray-800">
                   {reportData?.totalServices || 0}
                 </p>
               </div>

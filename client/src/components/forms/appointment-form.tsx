@@ -198,7 +198,7 @@ export function AppointmentForm() {
           <Button 
             type="submit" 
             disabled={isLoading} 
-            className="w-full bg-brand-blue hover:bg-blue-800"
+            className="w-full bg-brand-carbon hover:bg-gray-800"
           >
             {isLoading ? "Programando..." : "Programar Cita"}
           </Button>

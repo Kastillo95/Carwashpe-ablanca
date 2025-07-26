@@ -11,7 +11,7 @@ export function Header() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   return (
-    <header className="bg-brand-blue text-white shadow-lg">
+    <header className="bg-brand-carbon text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
@@ -25,7 +25,7 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-xl font-bold">{BUSINESS_INFO.name.toUpperCase()}</h1>
-              <p className="text-sm text-blue-200">Sistema de Gestión</p>
+              <p className="text-sm text-gray-300">Sistema de Gestión</p>
             </div>
           </div>
           
