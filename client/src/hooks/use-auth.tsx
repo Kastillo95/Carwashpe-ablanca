@@ -6,6 +6,7 @@ interface AuthContextType {
   login: (password: string) => boolean;
   logout: () => void;
   validatePassword: (password: string) => boolean;
+  requestAdminPassword: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,8 +42,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return password === ADMIN_PASSWORD;
   };
 
+  const requestAdminPassword = async (): Promise<string> => {
+    if (isAdminMode) {
+      return ADMIN_PASSWORD;
+    }
+    
+    const password = prompt("Por favor, ingresa la contraseña de administrador:");
+    if (!password) {
+      throw new Error("Contraseña requerida");
+    }
+    
+    if (!validatePassword(password)) {
+      throw new Error("Contraseña incorrecta");
+    }
+    
+    return password;
+  };
+
   return (
-    <AuthContext.Provider value={{ isAdminMode, login, logout, validatePassword }}>
+    <AuthContext.Provider value={{ isAdminMode, login, logout, validatePassword, requestAdminPassword }}>
       {children}
     </AuthContext.Provider>
   );
