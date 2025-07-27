@@ -6,7 +6,7 @@ import {
   services, customers, appointments, inventory, invoices, invoiceItems, promotions, promotionSends
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Services
@@ -72,480 +72,15 @@ export interface IStorage {
   getNextServiceNumber(): Promise<number>;
 }
 
-export class MemStorage implements IStorage {
-  // DEPRECATED: Esta clase ya no se usa, se mantiene solo para compatibilidad
-  async getNextServiceNumber(): Promise<number> {
-    return this.currentServiceId;
-  }
-  private services: Map<number, Service> = new Map();
-  private customers: Map<number, Customer> = new Map();
-  private appointments: Map<number, Appointment> = new Map();
-  private inventory: Map<number, Inventory> = new Map();
-  private invoices: Map<number, Invoice> = new Map();
-  private invoiceItems: Map<number, InvoiceItem> = new Map();
-  private invoiceItemsIndex: Map<number, number[]> = new Map(); // invoiceId -> itemIds[]
-  
-  private currentServiceId = 1;
-  private currentCustomerId = 1;
-  private currentAppointmentId = 1;
-  private currentInventoryId = 1;
-  private currentInvoiceId = 1;
-  private currentInvoiceItemId = 1;
-  private currentInvoiceNumber = 1;
-
-  constructor() {
-    this.seedInitialData();
-  }
-
-  private seedInitialData() {
-    // Services
-    const services = [
-      { name: "Lavado Básico", description: "Lavado exterior básico", price: "80.00", duration: 30 },
-      { name: "Lavado Completo", description: "Lavado exterior e interior", price: "150.00", duration: 45 },
-      { name: "Lavado Premium", description: "Lavado completo con detalles", price: "250.00", duration: 60 },
-      { name: "Encerado", description: "Aplicación de cera protectora", price: "200.00", duration: 30 },
-      { name: "Detallado Completo", description: "Servicio completo de detallado", price: "400.00", duration: 90 },
-    ];
-
-    services.forEach(service => {
-      this.services.set(this.currentServiceId, {
-        id: this.currentServiceId,
-        ...service,
-        active: true,
-      });
-      this.currentServiceId++;
-    });
-
-    // Inventory
-    const inventoryItems = [
-      { name: "Champú para Autos", description: "Champú concentrado para lavado", barcode: "001", quantity: 25, minQuantity: 5, price: "45.00", supplier: "AutoClean", category: "Limpieza" },
-      { name: "Cera Automotriz", description: "Cera protectora premium", barcode: "002", quantity: 3, minQuantity: 5, price: "120.00", supplier: "CarCare Pro", category: "Protección" },
-      { name: "Toallas de Microfibra", description: "Toallas de secado premium", barcode: "003", quantity: 50, minQuantity: 10, price: "15.00", supplier: "Textiles HN", category: "Accesorios" },
-      { name: "Desengrasante", description: "Desengrasante industrial", barcode: "004", quantity: 8, minQuantity: 3, price: "85.00", supplier: "AutoClean", category: "Limpieza" },
-      { name: "Limpiador de Llantas", description: "Limpiador especializado para llantas", barcode: "005", quantity: 12, minQuantity: 5, price: "65.00", supplier: "CarCare Pro", category: "Limpieza" },
-    ];
-
-    inventoryItems.forEach(item => {
-      this.inventory.set(this.currentInventoryId, {
-        id: this.currentInventoryId,
-        ...item,
-        active: true,
-        imageUrl: null,
-        isService: false,
-      });
-      this.currentInventoryId++;
-    });
-  }
-
-  // Services
-  async getServices(): Promise<Service[]> {
-    return Array.from(this.services.values()).filter(s => s.active);
-  }
-
-  async getService(id: number): Promise<Service | undefined> {
-    return this.services.get(id);
-  }
-
-  async createService(service: InsertService): Promise<Service> {
-    const newService: Service = {
-      id: this.currentServiceId++,
-      ...service,
-      description: service.description ?? null,
-      active: service.active ?? true,
-    };
-    this.services.set(newService.id, newService);
-    return newService;
-  }
-
-  async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
-    const existing = this.services.get(id);
-    if (!existing) throw new Error("Service not found");
-    
-    const updated = { ...existing, ...service };
-    this.services.set(id, updated);
-    return updated;
-  }
-
-  async deleteService(id: number): Promise<void> {
-    this.services.delete(id);
-  }
-
-  // Customers
-  async getCustomers(): Promise<Customer[]> {
-    return Array.from(this.customers.values());
-  }
-
-  async getCustomer(id: number): Promise<Customer | undefined> {
-    return this.customers.get(id);
-  }
-
-  async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const newCustomer: Customer = {
-      id: this.currentCustomerId++,
-      ...customer,
-      active: customer.active ?? true,
-      phone: customer.phone ?? null,
-      email: customer.email ?? null,
-      taxId: customer.taxId ?? null,
-      address: customer.address ?? null,
-      notes: customer.notes ?? null,
-      totalSpent: customer.totalSpent ?? "0.00",
-      lastVisit: customer.lastVisit ?? null,
-      createdAt: new Date(),
-    };
-    this.customers.set(newCustomer.id, newCustomer);
-    return newCustomer;
-  }
-
-  async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
-    const existing = this.customers.get(id);
-    if (!existing) throw new Error("Customer not found");
-    
-    const updated = { ...existing, ...customer };
-    this.customers.set(id, updated);
-    return updated;
-  }
-
-  async getCustomerByPhone(phone: string): Promise<Customer | undefined> {
-    return Array.from(this.customers.values()).find(c => c.phone === phone);
-  }
-
-  async searchCustomers(query: string): Promise<Customer[]> {
-    const searchTerm = query.toLowerCase();
-    return Array.from(this.customers.values()).filter(c => 
-      c.name.toLowerCase().includes(searchTerm) || 
-      (c.phone && c.phone.includes(searchTerm)) ||
-      (c.email && c.email.toLowerCase().includes(searchTerm))
-    );
-  }
-
-  async getTopCustomers(limit: number = 10): Promise<Customer[]> {
-    return Array.from(this.customers.values())
-      .sort((a, b) => parseFloat(b.totalSpent || "0") - parseFloat(a.totalSpent || "0"))
-      .slice(0, limit);
-  }
-
-  async updateCustomerSpent(customerId: number, amount: number): Promise<void> {
-    const customer = this.customers.get(customerId);
-    if (customer) {
-      const currentSpent = parseFloat(customer.totalSpent || "0");
-      const updated = { ...customer, totalSpent: (currentSpent + amount).toFixed(2) };
-      this.customers.set(customerId, updated);
-    }
-  }
-
-  // Appointments
-  async getAppointments(): Promise<Appointment[]> {
-    return Array.from(this.appointments.values());
-  }
-
-  async getAppointment(id: number): Promise<Appointment | undefined> {
-    return this.appointments.get(id);
-  }
-
-  async getAppointmentsByDate(date: string): Promise<Appointment[]> {
-    return Array.from(this.appointments.values()).filter(a => a.date === date);
-  }
-
-  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const newAppointment: Appointment = {
-      id: this.currentAppointmentId++,
-      ...appointment,
-      customerId: null,
-      serviceId: null,
-      customerPhone: appointment.customerPhone ?? null,
-      status: appointment.status ?? "scheduled",
-      createdAt: new Date(),
-    };
-    this.appointments.set(newAppointment.id, newAppointment);
-    return newAppointment;
-  }
-
-  async updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment> {
-    const existing = this.appointments.get(id);
-    if (!existing) throw new Error("Appointment not found");
-    
-    const updated = { ...existing, ...appointment };
-    this.appointments.set(id, updated);
-    return updated;
-  }
-
-  async deleteAppointment(id: number): Promise<void> {
-    this.appointments.delete(id);
-  }
-
-  // Inventory
-  async getInventory(): Promise<Inventory[]> {
-    return Array.from(this.inventory.values()).filter(i => i.active);
-  }
-
-  async getInventoryItem(id: number): Promise<Inventory | undefined> {
-    return this.inventory.get(id);
-  }
-
-  async getInventoryItemByBarcode(barcode: string): Promise<Inventory | undefined> {
-    return Array.from(this.inventory.values()).find(item => item.barcode === barcode && item.active);
-  }
-
-  async createInventoryItem(item: InsertInventory): Promise<Inventory> {
-    const newItem: Inventory = {
-      id: this.currentInventoryId++,
-      ...item,
-      description: item.description ?? null,
-      barcode: item.barcode ?? null,
-      quantity: item.quantity ?? 0,
-      minQuantity: item.minQuantity ?? null,
-      supplier: item.supplier ?? null,
-      category: item.category ?? null,
-      imageUrl: item.imageUrl ?? null,
-      isService: item.isService ?? false,
-      active: item.active ?? true,
-    };
-    this.inventory.set(newItem.id, newItem);
-    return newItem;
-  }
-
-  async updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory> {
-    const existing = this.inventory.get(id);
-    if (!existing) throw new Error("Inventory item not found");
-    
-    const updated = { ...existing, ...item };
-    this.inventory.set(id, updated);
-    return updated;
-  }
-
-  async deleteInventoryItem(id: number): Promise<void> {
-    this.inventory.delete(id);
-  }
-
-  async reduceStock(id: number, quantity: number): Promise<Inventory> {
-    const item = this.inventory.get(id);
-    if (!item) throw new Error("Inventory item not found");
-    
-    if ((item.quantity ?? 0) < quantity) {
-      throw new Error("Insufficient stock");
-    }
-    
-    const updated = { ...item, quantity: (item.quantity ?? 0) - quantity };
-    this.inventory.set(id, updated);
-    return updated;
-  }
-
-  // Invoices
-  async getInvoices(): Promise<Invoice[]> {
-    return Array.from(this.invoices.values());
-  }
-
-  async getInvoice(id: number): Promise<Invoice | undefined> {
-    return this.invoices.get(id);
-  }
-
-  async getInvoiceWithItems(id: number): Promise<{ invoice: Invoice; items: InvoiceItem[] } | undefined> {
-    const invoice = this.invoices.get(id);
-    if (!invoice) return undefined;
-    
-    const itemIds = this.invoiceItemsIndex.get(id) || [];
-    const items = itemIds.map(itemId => this.invoiceItems.get(itemId)!).filter(Boolean);
-    
-    return { invoice, items };
-  }
-
-  async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
-    const invoiceNumber = await this.getNextInvoiceNumber();
-    
-    // Reduce inventory stock if provided
-    if (data.inventoryItems) {
-      for (const inventoryItem of data.inventoryItems) {
-        await this.reduceStock(inventoryItem.id, inventoryItem.quantity);
-      }
-    }
-    
-    // Calculate totals (sin mostrar impuestos)
-    const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const tax = 0; // No mostrar impuestos
-    const total = subtotal;
-    
-    // Create invoice
-    const invoice: Invoice = {
-      id: this.currentInvoiceId++,
-      number: invoiceNumber,
-      customerId: null,
-      customerName: data.customer.name,
-      customerPhone: data.customer.phone || null,
-      customerTaxId: data.customer.taxId || null,
-      subtotal: subtotal.toFixed(2),
-      tax: tax.toFixed(2),
-      total: total.toFixed(2),
-      status: "paid",
-      date: data.date,
-      createdAt: new Date(),
-    };
-    
-    this.invoices.set(invoice.id, invoice);
-    
-    // Create invoice items
-    const items: InvoiceItem[] = [];
-    const itemIds: number[] = [];
-    
-    for (const itemData of data.items) {
-      const item: InvoiceItem = {
-        id: this.currentInvoiceItemId++,
-        invoiceId: invoice.id,
-        serviceName: itemData.serviceName,
-        quantity: itemData.quantity,
-        unitPrice: itemData.unitPrice.toFixed(2),
-        total: (itemData.quantity * itemData.unitPrice).toFixed(2),
-      };
-      
-      this.invoiceItems.set(item.id, item);
-      items.push(item);
-      itemIds.push(item.id);
-    }
-    
-    this.invoiceItemsIndex.set(invoice.id, itemIds);
-    
-    return { invoice, items };
-  }
-
-  async updateInvoiceStatus(id: number, status: string): Promise<Invoice> {
-    const existing = this.invoices.get(id);
-    if (!existing) throw new Error("Invoice not found");
-    
-    const updated = { ...existing, status };
-    this.invoices.set(id, updated);
-    return updated;
-  }
-
-  async getNextInvoiceNumber(): Promise<string> {
-    const number = String(this.currentInvoiceNumber).padStart(4, '0');
-    this.currentInvoiceNumber++;
-    return `001-${number}`;
-  }
-
-  // Reports
-  async getDashboardStats(): Promise<DashboardStats> {
-    const today = new Date().toISOString().split('T')[0];
-    const todayAppointments = await this.getAppointmentsByDate(today);
-    
-    const dailyRevenue = todayAppointments
-      .filter(a => a.status === "completed")
-      .reduce((sum, a) => sum + parseFloat(a.servicePrice), 0);
-    
-    const lowStockItems = Array.from(this.inventory.values())
-      .filter(i => i.active && (i.quantity ?? 0) <= (i.minQuantity ?? 0)).length;
-    
-    const servedCustomers = todayAppointments.filter(a => a.status === "completed").length;
-    
-    return {
-      todayAppointments: todayAppointments.length,
-      dailyRevenue,
-      lowStockItems,
-      servedCustomers,
-    };
-  }
-
-  async getReportData(startDate: string, endDate: string): Promise<ReportData> {
-    const appointments = Array.from(this.appointments.values())
-      .filter(a => a.date >= startDate && a.date <= endDate && a.status === "completed");
-    
-    const invoices = Array.from(this.invoices.values())
-      .filter(i => i.date >= startDate && i.date <= endDate);
-    
-    const totalRevenue = invoices.reduce((sum, i) => sum + parseFloat(i.total), 0);
-    const totalServices = appointments.length;
-    const totalCustomers = new Set(appointments.map(a => a.customerName)).size;
-    
-    // Find most popular service
-    const serviceCounts = appointments.reduce((counts, a) => {
-      counts[a.serviceName] = (counts[a.serviceName] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
-    
-    const topService = Object.entries(serviceCounts)
-      .sort(([, a], [, b]) => b - a)[0]?.[0] || "N/A";
-    
-    return {
-      totalRevenue,
-      totalServices,
-      totalCustomers,
-      topService,
-      period: `${startDate} a ${endDate}`,
-    };
-  }
-
-  // CRM - Promotions methods
-  private promotions: Map<number, any> = new Map();
-  private promotionSends: Map<number, any> = new Map();
-  private currentPromotionId = 1;
-  private currentPromotionSendId = 1;
-
-  async getPromotions(): Promise<any[]> {
-    return Array.from(this.promotions.values());
-  }
-
-  async getPromotion(id: number): Promise<any | undefined> {
-    return this.promotions.get(id);
-  }
-
-  async createPromotion(promotion: any): Promise<any> {
-    const newPromotion = {
-      id: this.currentPromotionId++,
-      ...promotion,
-    };
-    this.promotions.set(newPromotion.id, newPromotion);
-    return newPromotion;
-  }
-
-  async updatePromotion(id: number, promotion: any): Promise<any> {
-    const existing = this.promotions.get(id);
-    if (!existing) throw new Error("Promotion not found");
-    
-    const updated = { ...existing, ...promotion };
-    this.promotions.set(id, updated);
-    return updated;
-  }
-
-  async deletePromotion(id: number): Promise<void> {
-    this.promotions.delete(id);
-  }
-
-  async getActivePromotions(): Promise<any[]> {
-    return Array.from(this.promotions.values()).filter(p => p.active);
-  }
-
-  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<any> {
-    const promotionSend = {
-      id: this.currentPromotionSendId++,
-      promotionId,
-      customerId,
-      sentAt: new Date(),
-      status: "sent",
-    };
-    this.promotionSends.set(promotionSend.id, promotionSend);
-    return promotionSend;
-  }
-
-  async sendPromotionToAllCustomers(promotionId: number): Promise<any[]> {
-    const customers = await this.getCustomers();
-    const sends = [];
-    for (const customer of customers) {
-      const send = await this.sendPromotionToCustomer(promotionId, customer.id);
-      sends.push(send);
-    }
-    return sends;
-  }
-
-  async getPromotionSends(promotionId: number): Promise<any[]> {
-    return Array.from(this.promotionSends.values()).filter(ps => ps.promotionId === promotionId);
-  }
-}
-
-// Database Storage Implementation
 export class DatabaseStorage implements IStorage {
+  async getNextServiceNumber(): Promise<number> {
+    const allServices = await db.select().from(services);
+    return allServices.length + 1;
+  }
+
   // Services
   async getServices(): Promise<Service[]> {
-    const result = await db.select().from(services).where(eq(services.active, true));
-    return result;
+    return await db.select().from(services).where(eq(services.active, true));
   }
 
   async getService(id: number): Promise<Service | undefined> {
@@ -554,13 +89,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createService(service: InsertService): Promise<Service> {
-    const [newService] = await db.insert(services).values(service).returning();
+    const [newService] = await db
+      .insert(services)
+      .values(service)
+      .returning();
     return newService;
   }
 
   async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
-    const [updated] = await db.update(services).set(service).where(eq(services.id, id)).returning();
-    if (!updated) throw new Error("Service not found");
+    const [updated] = await db
+      .update(services)
+      .set(service)
+      .where(eq(services.id, id))
+      .returning();
     return updated;
   }
 
@@ -568,9 +109,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(services).where(eq(services.id, id));
   }
 
-  // Customers - CRM
+  // Customers
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).orderBy(customers.lastVisit);
+    return await db.select().from(customers);
   }
 
   async getCustomer(id: number): Promise<Customer | undefined> {
@@ -584,37 +125,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [newCustomer] = await db.insert(customers).values({
-      ...customer,
-      createdAt: new Date(),
-      lastVisit: new Date()
-    }).returning();
+    const [newCustomer] = await db
+      .insert(customers)
+      .values(customer)
+      .returning();
     return newCustomer;
   }
 
   async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer> {
-    const [updated] = await db.update(customers).set(customer).where(eq(customers.id, id)).returning();
-    if (!updated) throw new Error("Customer not found");
+    const [updated] = await db
+      .update(customers)
+      .set(customer)
+      .where(eq(customers.id, id))
+      .returning();
     return updated;
   }
 
   async searchCustomers(query: string): Promise<Customer[]> {
     return await db.select().from(customers).where(
-      sql`${customers.name} ILIKE ${`%${query}%`} OR ${customers.phone} ILIKE ${`%${query}%`} OR ${customers.email} ILIKE ${`%${query}%`}`
+      sql`${customers.name} ILIKE ${`%${query}%`} OR 
+          ${customers.phone} ILIKE ${`%${query}%`} OR 
+          ${customers.email} ILIKE ${`%${query}%`}`
     );
   }
 
-  async getTopCustomers(limit = 10): Promise<Customer[]> {
+  async getTopCustomers(limit: number = 10): Promise<Customer[]> {
     return await db.select().from(customers)
-      .orderBy(sql`${customers.totalSpent} DESC`)
+      .orderBy(desc(customers.totalSpent))
       .limit(limit);
   }
 
   async updateCustomerSpent(customerId: number, amount: number): Promise<void> {
-    await db.update(customers)
+    await db
+      .update(customers)
       .set({ 
-        totalSpent: sql`${customers.totalSpent} + ${amount}`,
-        lastVisit: new Date()
+        totalSpent: sql`${customers.totalSpent} + ${amount.toString()}` 
       })
       .where(eq(customers.id, customerId));
   }
@@ -634,13 +179,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newAppointment] = await db.insert(appointments).values(appointment).returning();
+    const [newAppointment] = await db
+      .insert(appointments)
+      .values(appointment)
+      .returning();
     return newAppointment;
   }
 
   async updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
-    if (!updated) throw new Error("Appointment not found");
+    const [updated] = await db
+      .update(appointments)
+      .set(appointment)
+      .where(eq(appointments.id, id))
+      .returning();
     return updated;
   }
 
@@ -659,21 +210,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInventoryItemByBarcode(barcode: string): Promise<Inventory | undefined> {
-    const [item] = await db.select().from(inventory).where(and(
-      eq(inventory.barcode, barcode),
-      eq(inventory.active, true)
-    ));
+    const [item] = await db.select().from(inventory).where(
+      and(eq(inventory.barcode, barcode), eq(inventory.active, true))
+    );
     return item || undefined;
   }
 
   async createInventoryItem(item: InsertInventory): Promise<Inventory> {
-    const [newItem] = await db.insert(inventory).values(item).returning();
+    const [newItem] = await db
+      .insert(inventory)
+      .values(item)
+      .returning();
     return newItem;
   }
 
   async updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory> {
-    const [updated] = await db.update(inventory).set(item).where(eq(inventory.id, id)).returning();
-    if (!updated) throw new Error("Inventory item not found");
+    const [updated] = await db
+      .update(inventory)
+      .set(item)
+      .where(eq(inventory.id, id))
+      .returning();
     return updated;
   }
 
@@ -682,23 +238,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reduceStock(id: number, quantity: number): Promise<Inventory> {
-    const [item] = await db.select().from(inventory).where(eq(inventory.id, id));
-    if (!item) throw new Error("Inventory item not found");
-    
-    // Skip stock reduction for services
-    if (item.isService) {
-      return item;
-    }
-    
-    if ((item.quantity || 0) < quantity) {
-      throw new Error(`Stock insuficiente para ${item.name}`);
-    }
-    
-    const [updated] = await db.update(inventory)
-      .set({ quantity: (item.quantity || 0) - quantity })
+    const [updated] = await db
+      .update(inventory)
+      .set({ 
+        quantity: sql`${inventory.quantity} - ${quantity}` 
+      })
       .where(eq(inventory.id, id))
       .returning();
-    
     return updated;
   }
 
@@ -713,211 +259,144 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInvoiceWithItems(id: number): Promise<{ invoice: Invoice; items: InvoiceItem[] } | undefined> {
-    console.log("Getting invoice with ID:", id);
-    const invoice = await this.getInvoice(id);
-    console.log("Found invoice:", invoice);
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
     if (!invoice) return undefined;
     
     const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-    console.log("Found items:", items);
     return { invoice, items };
   }
 
-  async createInvoice(data: CreateInvoiceData & { inventoryItems?: { id: number; quantity: number }[] }): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
-    return await db.transaction(async (tx) => {
-      // Reduce inventory stock if provided (only for physical products, not services)
-      if (data.inventoryItems && data.inventoryItems.length > 0) {
-        console.log('Processing inventory items:', data.inventoryItems);
-        for (const inventoryItem of data.inventoryItems) {
-          const [item] = await tx.select().from(inventory).where(eq(inventory.id, inventoryItem.id));
-          if (!item) {
-            console.error(`Inventory item not found: ID ${inventoryItem.id}`);
-            throw new Error(`Inventory item not found: ID ${inventoryItem.id}`);
-          }
-          
-          // Only check and reduce stock for physical products (not services)
-          const isService = item.isService || item.name?.toLowerCase().includes('servicio');
-          console.log(`Item ${item.name}: isService=${item.isService}, calculated isService=${isService}`);
-          
-          if (!isService) {
-            if ((item.quantity || 0) < inventoryItem.quantity) {
-              throw new Error(`Stock insuficiente para ${item.name}`);
-            }
-            
-            await tx.update(inventory)
-              .set({ quantity: (item.quantity || 0) - inventoryItem.quantity })
-              .where(eq(inventory.id, inventoryItem.id));
-          } else {
-            console.log(`Skipping stock reduction for service: ${item.name}`);
-          }
-        }
-      }
-
-      // Get next invoice number
-      const invoiceNumber = await this.getNextInvoiceNumber();
-      
-      // Calculate totals (sin mostrar impuestos)
-      const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-      const tax = 0; // No mostrar impuestos
-      const total = subtotal;
-      
-      // CRM: Buscar o crear cliente automáticamente
-      let customerId = null;
-      if (data.customer.phone) {
-        let existingCustomer = await this.getCustomerByPhone(data.customer.phone);
-        
-        if (existingCustomer) {
-          // Actualizar información del cliente existente
-          await tx.update(customers).set({
-            name: data.customer.name,
-            lastVisit: new Date(),
-            totalSpent: sql`${customers.totalSpent} + ${total}`
-          }).where(eq(customers.id, existingCustomer.id));
-          customerId = existingCustomer.id;
-        } else {
-          // Crear nuevo cliente
-          const [newCustomer] = await tx.insert(customers).values({
-            name: data.customer.name,
-            phone: data.customer.phone,
-            email: null,
-            taxId: data.customer.taxId || null,
-            address: null,
-            notes: "Cliente creado automáticamente desde facturación",
-            totalSpent: total.toFixed(2),
-            lastVisit: new Date(),
-            createdAt: new Date(),
-            active: true
-          }).returning();
-          customerId = newCustomer.id;
-        }
-      }
-      
-      // Create invoice
-      const [invoice] = await tx.insert(invoices).values({
-        number: invoiceNumber,
-        customerId,
-        customerName: data.customer.name,
-        customerPhone: data.customer.phone || null,
-        customerTaxId: data.customer.taxId || null,
-        subtotal: subtotal.toFixed(2),
-        tax: tax.toFixed(2),
-        total: total.toFixed(2),
-        status: "paid",
-        date: data.date,
-      }).returning();
-      
-      // Create invoice items
-      const itemsData = data.items.map(item => ({
-        invoiceId: invoice.id,
-        serviceName: item.serviceName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice.toFixed(2),
-        total: (item.quantity * item.unitPrice).toFixed(2),
-      }));
-      
-      const items = await tx.insert(invoiceItems).values(itemsData).returning();
-      
-      return { invoice, items };
-    });
+  async createInvoice(data: CreateInvoiceData): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
+    const invoiceNumber = await this.getNextInvoiceNumber();
+    
+    // Calculate totals
+    const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const tax = subtotal * 0.15; // 15% tax
+    const total = subtotal + tax;
+    
+    const [invoice] = await db.insert(invoices).values({
+      number: invoiceNumber,
+      customerName: data.customer.name,
+      customerPhone: data.customer.phone || null,
+      customerTaxId: data.customer.taxId || null,
+      subtotal: subtotal.toFixed(2),
+      tax: tax.toFixed(2),
+      total: total.toFixed(2),
+      date: data.date,
+      status: "pending"
+    }).returning();
+    
+    const items = await Promise.all(
+      data.items.map(item => 
+        db.insert(invoiceItems).values({
+          invoiceId: invoice.id,
+          serviceName: item.serviceName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice.toFixed(2),
+          total: (item.quantity * item.unitPrice).toFixed(2)
+        }).returning().then(result => result[0])
+      )
+    );
+    
+    return { invoice, items };
   }
 
   async updateInvoiceStatus(id: number, status: string): Promise<Invoice> {
-    const [updated] = await db.update(invoices).set({ status }).where(eq(invoices.id, id)).returning();
-    if (!updated) throw new Error("Invoice not found");
+    const [updated] = await db
+      .update(invoices)
+      .set({ status })
+      .where(eq(invoices.id, id))
+      .returning();
     return updated;
   }
 
   async getNextInvoiceNumber(): Promise<string> {
-    const [result] = await db.select({ maxId: sql<number>`MAX(${invoices.id})` }).from(invoices);
-    const nextNumber = (result?.maxId || 0) + 1;
-    return `001-${String(nextNumber).padStart(4, '0')}`;
-  }
-
-  async getNextServiceNumber(): Promise<number> {
-    const [result] = await db.select({ 
-      count: sql<number>`COUNT(*)` 
-    }).from(inventory).where(eq(inventory.isService, true));
-    return (result?.count || 0) + 1;
+    const lastInvoice = await db.select().from(invoices)
+      .orderBy(desc(invoices.id))
+      .limit(1);
+    
+    const nextNumber = lastInvoice.length > 0 ? 
+      parseInt(lastInvoice[0].number.replace(/\D/g, '')) + 1 : 1;
+    
+    return `INV-${nextNumber.toString().padStart(6, '0')}`;
   }
 
   // Reports
   async getDashboardStats(): Promise<DashboardStats> {
     const today = new Date().toISOString().split('T')[0];
     
-    const [todayAppointmentsResult] = await db.select({ 
-      count: sql<number>`COUNT(*)` 
-    }).from(appointments).where(eq(appointments.date, today));
+    const [todayAppointmentsResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(eq(appointments.date, today));
     
-    const [dailyRevenueResult] = await db.select({ 
-      revenue: sql<number>`COALESCE(SUM(CAST(${invoices.total} AS DECIMAL)), 0)` 
-    }).from(invoices).where(eq(invoices.date, today));
+    const [dailyRevenueResult] = await db.select({ total: sql<number>`sum(${invoices.total}::numeric)` })
+      .from(invoices)
+      .where(and(eq(invoices.date, today), eq(invoices.status, "paid")));
     
-    const [lowStockResult] = await db.select({ 
-      count: sql<number>`COUNT(*)` 
-    }).from(inventory).where(and(
-      sql`${inventory.quantity} <= ${inventory.minQuantity}`,
-      eq(inventory.active, true)
-    ));
+    const [lowStockItemsResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(inventory)
+      .where(sql`${inventory.quantity} <= ${inventory.minQuantity} AND ${inventory.active} = true`);
     
-    const [customersResult] = await db.select({ 
-      count: sql<number>`COUNT(DISTINCT ${invoices.customerName})` 
-    }).from(invoices);
+    const [servedCustomersResult] = await db.select({ count: sql<number>`count(distinct ${appointments.customerName})` })
+      .from(appointments)
+      .where(eq(appointments.date, today));
     
     return {
       todayAppointments: todayAppointmentsResult?.count || 0,
-      dailyRevenue: dailyRevenueResult?.revenue || 0,
-      lowStockItems: lowStockResult?.count || 0,
-      servedCustomers: customersResult?.count || 0,
+      dailyRevenue: dailyRevenueResult?.total || 0,
+      lowStockItems: lowStockItemsResult?.count || 0,
+      servedCustomers: servedCustomersResult?.count || 0
     };
   }
 
   async getReportData(startDate: string, endDate: string): Promise<ReportData> {
-    const [revenueResult] = await db.select({ 
-      revenue: sql<number>`COALESCE(SUM(CAST(${invoices.total} AS DECIMAL)), 0)` 
-    }).from(invoices).where(and(
-      gte(invoices.date, startDate),
-      lte(invoices.date, endDate)
-    ));
-    
-    const [servicesResult] = await db.select({ 
-      count: sql<number>`COUNT(*)` 
-    }).from(invoiceItems).where(and(
-      gte(invoices.date, startDate),
-      lte(invoices.date, endDate)
-    ));
-    
-    const [customersResult] = await db.select({ 
-      count: sql<number>`COUNT(DISTINCT ${invoices.customerName})` 
-    }).from(invoices).where(and(
-      gte(invoices.date, startDate),
-      lte(invoices.date, endDate)
-    ));
-    
-    const [topServiceResult] = await db.select({ 
-      serviceName: invoiceItems.serviceName,
-      count: sql<number>`COUNT(*)` 
-    }).from(invoiceItems)
-      .innerJoin(invoices, eq(invoiceItems.invoiceId, invoices.id))
+    const [revenueResult] = await db.select({ total: sql<number>`sum(${invoices.total}::numeric)` })
+      .from(invoices)
       .where(and(
         gte(invoices.date, startDate),
-        lte(invoices.date, endDate)
+        lte(invoices.date, endDate),
+        eq(invoices.status, "paid")
+      ));
+    
+    const [servicesResult] = await db.select({ count: sql<number>`count(*)` })
+      .from(appointments)
+      .where(and(
+        gte(appointments.date, startDate),
+        lte(appointments.date, endDate)
+      ));
+    
+    const [customersResult] = await db.select({ count: sql<number>`count(distinct ${appointments.customerName})` })
+      .from(appointments)
+      .where(and(
+        gte(appointments.date, startDate),
+        lte(appointments.date, endDate)
+      ));
+    
+    const [topServiceResult] = await db.select({ 
+      serviceName: appointments.serviceName, 
+      count: sql<number>`count(*)` 
+    })
+      .from(appointments)
+      .where(and(
+        gte(appointments.date, startDate),
+        lte(appointments.date, endDate)
       ))
-      .groupBy(invoiceItems.serviceName)
-      .orderBy(sql`COUNT(*) DESC`)
+      .groupBy(appointments.serviceName)
+      .orderBy(desc(sql`count(*)`))
       .limit(1);
     
     return {
-      totalRevenue: revenueResult?.revenue || 0,
+      totalRevenue: revenueResult?.total || 0,
       totalServices: servicesResult?.count || 0,
       totalCustomers: customersResult?.count || 0,
-      topService: topServiceResult?.serviceName || "N/A",
-      period: `${startDate} - ${endDate}`,
+      topService: topServiceResult[0]?.serviceName || "N/A",
+      period: `${startDate} - ${endDate}`
     };
   }
 
-  // Promotions - CRM
+  // Promotions
   async getPromotions(): Promise<Promotion[]> {
-    return await db.select().from(promotions).orderBy(sql`${promotions.createdAt} DESC`);
+    return await db.select().from(promotions);
   }
 
   async getPromotion(id: number): Promise<Promotion | undefined> {
@@ -926,16 +405,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPromotion(promotion: InsertPromotion): Promise<Promotion> {
-    const [newPromotion] = await db.insert(promotions).values({
-      ...promotion,
-      createdAt: new Date()
-    }).returning();
+    const [newPromotion] = await db
+      .insert(promotions)
+      .values(promotion)
+      .returning();
     return newPromotion;
   }
 
   async updatePromotion(id: number, promotion: Partial<InsertPromotion>): Promise<Promotion> {
-    const [updated] = await db.update(promotions).set(promotion).where(eq(promotions.id, id)).returning();
-    if (!updated) throw new Error("Promotion not found");
+    const [updated] = await db
+      .update(promotions)
+      .set(promotion)
+      .where(eq(promotions.id, id))
+      .returning();
     return updated;
   }
 
@@ -945,220 +427,48 @@ export class DatabaseStorage implements IStorage {
 
   async getActivePromotions(): Promise<Promotion[]> {
     const now = new Date();
-    return await db.select().from(promotions).where(and(
-      eq(promotions.active, true),
-      lte(promotions.validFrom, now),
-      gte(promotions.validUntil, now)
-    ));
-  }
-  
-  // Crear plantilla automática profesional con logo
-  private createPromotionTemplate(promotion: Promotion): string {
-    const logoText = "🚗✨ CARWASH PEÑA BLANCA ✨🚗";
-    const separator = "━━━━━━━━━━━━━━━━━━━━━━━━━";
-    
-    let template = `${logoText}\n${separator}\n\n`;
-    template += `🎉 *${promotion.title.toUpperCase()}* 🎉\n\n`;
-    template += `${promotion.message}\n\n`;
-    
-    if (promotion.discount) {
-      template += `💰 *¡${promotion.discount}% DE DESCUENTO!*\n\n`;
-    }
-    
-    // Agregar fechas de validez
-    const validFrom = new Date(promotion.validFrom).toLocaleDateString('es-HN');
-    const validUntil = new Date(promotion.validUntil).toLocaleDateString('es-HN');
-    template += `📅 *Válida:* ${validFrom} - ${validUntil}\n\n`;
-    
-    template += `${separator}\n`;
-    template += `📍 *Ubicación:* Peña Blanca, Cortés\n`;
-    template += `📞 *Teléfono:* +504 9464-8987\n`;
-    template += `🕒 *Horarios:*\n`;
-    template += `   Lun-Sáb: 8:00 AM - 5:00 PM\n`;
-    template += `   Domingo: 8:00 AM - 3:00 PM\n\n`;
-    template += `¡Te esperamos para brindarte el mejor servicio! 🚗💨`;
-    
-    return template;
+    return await db.select().from(promotions).where(
+      and(
+        eq(promotions.active, true),
+        lte(promotions.validFrom, now),
+        gte(promotions.validUntil, now)
+      )
+    );
   }
 
-  // Promotion Sends con plantillas automáticas
-  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<any> {
-    const customer = await this.getCustomer(customerId);
-    if (!customer || !customer.phone) {
-      throw new Error("Cliente no encontrado o sin teléfono");
-    }
-
-    // Obtener la promoción para crear la plantilla
-    const [promotion] = await db.select().from(promotions).where(eq(promotions.id, promotionId));
-    if (!promotion) {
-      throw new Error("Promoción no encontrada");
-    }
-
-    const promotionMessage = this.createPromotionTemplate(promotion);
-
-    // Crear enlace de WhatsApp con la plantilla
-    const cleanPhone = customer.phone.replace(/[^\d]/g, '');
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(promotionMessage)}`;
-
-    const [send] = await db.insert(promotionSends).values({
-      promotionId,
-      customerId,
-      sentAt: new Date(),
-      status: "sent"
-    }).returning();
-
-    return { ...send, whatsappUrl, customerName: customer.name, phone: customer.phone };
+  // Promotion Sends
+  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<PromotionSend> {
+    const [send] = await db
+      .insert(promotionSends)
+      .values({
+        promotionId,
+        customerId,
+        status: "sent"
+      })
+      .returning();
+    return send;
   }
 
-  async sendPromotionToAllCustomers(promotionId: number): Promise<any[]> {
+  async sendPromotionToAllCustomers(promotionId: number): Promise<PromotionSend[]> {
     const allCustomers = await this.getCustomers();
-    const activeCustomers = allCustomers.filter(c => c.active && c.phone);
     
-    // Obtener la promoción para crear la plantilla
-    const [promotion] = await db.select().from(promotions).where(eq(promotions.id, promotionId));
-    if (!promotion) {
-      throw new Error("Promoción no encontrada");
-    }
-    
-    const promotionMessage = this.createPromotionTemplate(promotion);
-    const sends = [];
-    
-    for (const customer of activeCustomers) {
-      if (customer.phone) {
-        // Crear enlace de WhatsApp con la plantilla
-        const cleanPhone = customer.phone.replace(/[^\d]/g, '');
-        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(promotionMessage)}`;
-
-        const [send] = await db.insert(promotionSends).values({
+    const sends = await Promise.all(
+      allCustomers.map(customer =>
+        db.insert(promotionSends).values({
           promotionId,
           customerId: customer.id,
-          sentAt: new Date(),
           status: "sent"
-        }).returning();
-
-        sends.push({ ...send, whatsappUrl, customerName: customer.name, phone: customer.phone });
-      }
-    }
+        }).returning().then(result => result[0])
+      )
+    );
     
     return sends;
   }
 
   async getPromotionSends(promotionId: number): Promise<PromotionSend[]> {
-    return await db.select().from(promotionSends).where(eq(promotionSends.promotionId, promotionId));
+    return await db.select().from(promotionSends)
+      .where(eq(promotionSends.promotionId, promotionId));
   }
 }
 
-// Inicializar base de datos para aplicación portable
-async function initializeDatabase() {
-  try {
-    // Crear tablas si no existen
-    await db.run(sql`CREATE TABLE IF NOT EXISTS services (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      price TEXT NOT NULL,
-      duration INTEGER NOT NULL,
-      active INTEGER DEFAULT 1
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS customers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      phone TEXT,
-      email TEXT,
-      tax_id TEXT,
-      address TEXT,
-      notes TEXT,
-      total_spent TEXT DEFAULT '0.00',
-      last_visit TEXT,
-      created_at TEXT DEFAULT (datetime('now')),
-      active INTEGER DEFAULT 1
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS appointments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      customer_id INTEGER,
-      service_id INTEGER,
-      customer_name TEXT NOT NULL,
-      customer_phone TEXT,
-      service_name TEXT NOT NULL,
-      service_price TEXT NOT NULL,
-      date TEXT NOT NULL,
-      time TEXT NOT NULL,
-      status TEXT DEFAULT 'scheduled',
-      created_at TEXT DEFAULT (datetime('now'))
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS inventory (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      barcode TEXT UNIQUE,
-      quantity INTEGER DEFAULT 0,
-      min_quantity INTEGER,
-      price TEXT NOT NULL,
-      supplier TEXT,
-      category TEXT,
-      image_url TEXT,
-      is_service INTEGER DEFAULT 0,
-      active INTEGER DEFAULT 1
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS invoices (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      number TEXT NOT NULL UNIQUE,
-      customer_id INTEGER,
-      customer_name TEXT NOT NULL,
-      customer_phone TEXT,
-      customer_tax_id TEXT,
-      subtotal TEXT NOT NULL,
-      tax TEXT NOT NULL,
-      total TEXT NOT NULL,
-      status TEXT DEFAULT 'pending',
-      date TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now'))
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS invoice_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      invoice_id INTEGER,
-      service_name TEXT NOT NULL,
-      quantity INTEGER NOT NULL,
-      unit_price TEXT NOT NULL,
-      total TEXT NOT NULL
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS promotions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      message TEXT NOT NULL,
-      discount TEXT,
-      valid_from TEXT NOT NULL,
-      valid_until TEXT NOT NULL,
-      active INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
-    )`);
-
-    await db.run(sql`CREATE TABLE IF NOT EXISTS promotion_sends (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      promotion_id INTEGER,
-      customer_id INTEGER,
-      sent_at TEXT DEFAULT (datetime('now')),
-      status TEXT DEFAULT 'sent'
-    )`);
-
-    console.log('✅ Base de datos SQLite inicializada correctamente');
-  } catch (error) {
-    console.error('❌ Error inicializando base de datos:', error);
-  }
-}
-
-// Inicializar base de datos al cargar
-if (process.env.ELECTRON_MODE === 'true') {
-  initializeDatabase();
-}
-
-// Use MemStorage for web version, DatabaseStorage for electron
-export const storage = process.env.ELECTRON_MODE === 'true' 
-  ? new DatabaseStorage() 
-  : new MemStorage();
+export const storage = new DatabaseStorage();
