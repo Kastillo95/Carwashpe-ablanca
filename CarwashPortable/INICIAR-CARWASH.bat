@@ -33,18 +33,18 @@ if not exist "node_modules" (
     )
 )
 
-REM Mostrar mensaje antes de iniciar
 echo ✅ Componentes listos!
-echo 🖥️  Iniciando aplicación...
-echo ⏳ Espera unos segundos, se abrirá automáticamente...
+echo 🖥️  Iniciando servidor web...
+echo ⏳ Se abrirá automáticamente en tu navegador...
+echo.
+echo 💡 Para cerrar la aplicación: Ctrl+C
 echo.
 
-REM Iniciar la aplicación
-node electron-main.js
+REM Iniciar el servidor simple
+node servidor-simple.cjs
 
-REM Si llegamos aquí, hubo un error
+REM Si llegamos aquí, la aplicación se cerró
 echo.
-echo ❌ La aplicación se cerró inesperadamente
-echo 💡 Revisa los mensajes de error arriba
+echo 👋 Aplicación cerrada
 echo.
 pause
