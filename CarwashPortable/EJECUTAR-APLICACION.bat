@@ -11,46 +11,32 @@ echo.
 echo Iniciando aplicación de gestión...
 echo.
 
-REM Crear directorio de datos
-if not exist CarwashData mkdir CarwashData
-
-REM Configurar variables
-set NODE_ENV=production
-set PORT=3001
-set DATABASE_URL=file:CarwashData/carwash.db
-
-REM Verificar archivos
-if not exist "dist\index.js" (
-    echo ERROR: Archivos de aplicación no encontrados.
-    echo Verifica que la carpeta 'dist' exista con los archivos necesarios.
+REM Verificar que el ejecutable existe
+if not exist "CarwashPenaBlanca.exe" (
+    echo ERROR: CarwashPenaBlanca.exe no encontrado.
+    echo Verifica que el archivo esté en esta carpeta.
     pause
     exit /b 1
 )
 
-echo ✓ Configurando base de datos SQLite local
-echo ✓ Puerto configurado: 3001
-echo ✓ Datos en: CarwashData\carwash.db
+echo ✓ Archivo ejecutable encontrado
+echo ✓ Contraseña admin: 742211010338
+echo ✓ Base de datos SQLite integrada
 echo.
 
-echo Iniciando servidor backend...
-start /B node dist/index.js
+echo Iniciando Carwash Peña Blanca...
+echo.
+echo INFORMACIÓN IMPORTANTE:
+echo • El sistema se abrirá automáticamente
+echo • Usa la contraseña: 742211010338
+echo • Para cerrar: Cierra la aplicación normalmente
+echo.
 
-echo Esperando que el servidor inicie...
+REM Ejecutar la aplicación
+start "" "CarwashPenaBlanca.exe"
+
+echo ✓ Aplicación iniciada correctamente
+echo.
+echo Si necesitas ejecutar nuevamente, haz doble clic en CarwashPenaBlanca.exe
+echo.
 timeout /t 3 /nobreak >nul
-
-echo.
-echo ✓ Abriendo aplicación en navegador...
-echo.
-echo INFORMACIÓN:
-echo • URL: http://localhost:3001
-echo • Contraseña admin: 742211010338
-echo • Para cerrar: Ctrl+C en esta ventana
-echo.
-
-REM Abrir navegador en modo app (parece aplicación)
-start "" "http://localhost:3001"
-
-echo Aplicación iniciada. Mantén esta ventana abierta.
-echo Para acceder nuevamente: http://localhost:3001
-echo.
-pause

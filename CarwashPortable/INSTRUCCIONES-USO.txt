@@ -1,0 +1,82 @@
+====================================================
+         CARWASH PEÑA BLANCA - INSTRUCCIONES
+====================================================
+
+🎯 FORMAS DE USAR EL SISTEMA:
+
+1. FORMA MÁS SIMPLE (RECOMENDADO):
+   • Doble clic en: CarwashPenaBlanca.exe
+   • ¡Listo! El sistema se abre automáticamente
+
+2. USANDO EL LAUNCHER:
+   • Doble clic en: USAR-EJECUTABLE-SIMPLE.bat
+   • Te da información y ejecuta automáticamente
+
+3. LAUNCHER COMPLETO:
+   • Doble clic en: EJECUTAR-APLICACION.bat
+   • Muestra más información del sistema
+
+====================================================
+
+🔑 DATOS IMPORTANTES:
+
+• CONTRASEÑA ADMIN: 742211010338
+• NEGOCIO: Carwash Peña Blanca
+• TELÉFONO: +504 9464-8987
+• UBICACIÓN: Peña Blanca, Cortés
+
+====================================================
+
+📋 QUÉ INCLUYE EL SISTEMA:
+
+✅ Gestión de Citas - Programar servicios
+✅ Control de Clientes - Base de datos CRM
+✅ Inventario - Control de productos
+✅ Facturación - Generar facturas
+✅ Servicios - Catálogo completo
+✅ Reportes - Análisis del negocio
+✅ Dashboard - Estadísticas en tiempo real
+
+====================================================
+
+🛠️ SOLUCIÓN DE PROBLEMAS:
+
+PROBLEMA: No inicia la aplicación
+SOLUCIÓN: 
+• Ejecuta como administrador
+• Desactiva antivirus temporalmente
+• Verifica que tengas Windows 7 o superior
+
+PROBLEMA: Contraseña no funciona
+SOLUCIÓN:
+• Usa exactamente: 742211010338
+• No agregues espacios
+• Copia y pega la contraseña
+
+PROBLEMA: Base de datos vacía
+SOLUCIÓN:
+• El sistema incluye datos de ejemplo
+• Se crearán automáticamente al iniciar
+
+====================================================
+
+💡 CONSEJOS DE USO:
+
+1. BACKUP: Los datos se guardan automáticamente
+2. RENDIMIENTO: Cierra otras aplicaciones pesadas
+3. SEGURIDAD: Usa siempre la contraseña admin
+4. ACTUALIZACIONES: Contacta para nuevas versiones
+
+====================================================
+
+📞 SOPORTE TÉCNICO:
+
+Si tienes problemas:
+1. Lee estas instrucciones completas
+2. Verifica los requisitos del sistema
+3. Intenta las soluciones sugeridas
+4. Contacta para soporte especializado
+
+====================================================
+                 ¡LISTO PARA USAR!
+====================================================
