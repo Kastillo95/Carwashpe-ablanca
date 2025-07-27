@@ -1,0 +1,14 @@
+{
+  "name": "carwash-portable",
+  "version": "1.0.0",
+  "main": "electron-main.js",
+  "dependencies": {
+    "electron": "^37.2.4",
+    "express": "^4.21.2",
+    "better-sqlite3": "^9.0.0",
+    "drizzle-orm": "^0.39.1"
+  },
+  "scripts": {
+    "start": "node electron-main.js"
+  }
+}
