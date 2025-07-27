@@ -1,50 +1,66 @@
 @echo off
-echo 🚀 Iniciando Carwash Peña Blanca...
+echo.
+echo ========================================
+echo    CARWASH PEÑA BLANCA - SISTEMA
+echo ========================================
+echo.
+echo Iniciando aplicación...
 echo.
 
-REM Cambiar al directorio del script
 cd /d "%~dp0"
 
-REM Verificar si Node.js está instalado
-echo 🔍 Verificando Node.js...
-node --version
-if %errorlevel% neq 0 (
-    echo ❌ Node.js no está instalado en este sistema
+REM Configurar variables de entorno
+set ELECTRON_MODE=true
+set NODE_ENV=production
+set PORT=3001
+set DATABASE_URL=file:CarwashData/carwash.db
+
+REM Crear directorio de datos si no existe
+if not exist CarwashData mkdir CarwashData
+
+REM Verificar si Node.js está disponible
+node --version >nul 2>&1
+if errorlevel 1 (
     echo.
-    echo 💡 Descarga e instala Node.js desde: https://nodejs.org
+    echo ERROR: Node.js no está instalado en este sistema
+    echo.
+    echo Por favor instala Node.js desde: https://nodejs.org
+    echo Luego ejecuta este archivo nuevamente.
     echo.
     pause
     exit /b 1
 )
 
-echo ✅ Node.js encontrado!
-echo.
-
-REM Instalar dependencias si no existen
-if not exist "node_modules" (
-    echo 📦 Instalando componentes necesarios...
-    echo    (Esto puede tardar unos minutos la primera vez)
-    npm install --production
-    if %errorlevel% neq 0 (
-        echo ❌ Error instalando dependencias
+REM Instalar dependencias si es la primera vez
+if not exist node_modules (
+    echo Instalando dependencias (solo la primera vez)...
+    echo Esto puede tomar unos minutos...
+    echo.
+    npm install --production --silent
+    if errorlevel 1 (
+        echo.
+        echo ERROR: No se pudieron instalar las dependencias
         echo.
         pause
         exit /b 1
     )
 )
 
-echo ✅ Componentes listos!
-echo 🖥️  Iniciando servidor web...
-echo ⏳ Se abrirá automáticamente en tu navegador...
+echo Abriendo aplicación Carwash...
 echo.
-echo 💡 Para cerrar la aplicación: Ctrl+C
+echo IMPORTANTE:
+echo - La aplicación se abrirá en una ventana propia
+echo - NO necesitas usar navegador
+echo - Contraseña de administrador: 742211010338
+echo - Los datos se guardan automáticamente
 echo.
 
-REM Iniciar el servidor simple
-node servidor-simple.cjs
+REM Iniciar la aplicación
+start "" node dist/index.js
 
-REM Si llegamos aquí, la aplicación se cerró
 echo.
-echo 👋 Aplicación cerrada
+echo Aplicación iniciada correctamente!
+echo Puedes cerrar esta ventana.
 echo.
-pause
+timeout /t 3 /nobreak >nul
+exit

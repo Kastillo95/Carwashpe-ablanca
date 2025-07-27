@@ -1048,5 +1048,117 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use MemStorage for now to ensure immediate functionality
-export const storage = new MemStorage();
+// Inicializar base de datos para aplicación portable
+async function initializeDatabase() {
+  try {
+    // Crear tablas si no existen
+    await db.run(sql`CREATE TABLE IF NOT EXISTS services (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      price TEXT NOT NULL,
+      duration INTEGER NOT NULL,
+      active INTEGER DEFAULT 1
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      tax_id TEXT,
+      address TEXT,
+      notes TEXT,
+      total_spent TEXT DEFAULT '0.00',
+      last_visit TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      active INTEGER DEFAULT 1
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS appointments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER,
+      service_id INTEGER,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT,
+      service_name TEXT NOT NULL,
+      service_price TEXT NOT NULL,
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      status TEXT DEFAULT 'scheduled',
+      created_at TEXT DEFAULT (datetime('now'))
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS inventory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      barcode TEXT UNIQUE,
+      quantity INTEGER DEFAULT 0,
+      min_quantity INTEGER,
+      price TEXT NOT NULL,
+      supplier TEXT,
+      category TEXT,
+      image_url TEXT,
+      is_service INTEGER DEFAULT 0,
+      active INTEGER DEFAULT 1
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS invoices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      number TEXT NOT NULL UNIQUE,
+      customer_id INTEGER,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT,
+      customer_tax_id TEXT,
+      subtotal TEXT NOT NULL,
+      tax TEXT NOT NULL,
+      total TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      date TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS invoice_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invoice_id INTEGER,
+      service_name TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      unit_price TEXT NOT NULL,
+      total TEXT NOT NULL
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS promotions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      discount TEXT,
+      valid_from TEXT NOT NULL,
+      valid_until TEXT NOT NULL,
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    )`);
+
+    await db.run(sql`CREATE TABLE IF NOT EXISTS promotion_sends (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      promotion_id INTEGER,
+      customer_id INTEGER,
+      sent_at TEXT DEFAULT (datetime('now')),
+      status TEXT DEFAULT 'sent'
+    )`);
+
+    console.log('✅ Base de datos SQLite inicializada correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando base de datos:', error);
+  }
+}
+
+// Inicializar base de datos al cargar
+if (process.env.ELECTRON_MODE === 'true') {
+  initializeDatabase();
+}
+
+// Use MemStorage for web version, DatabaseStorage for electron
+export const storage = process.env.ELECTRON_MODE === 'true' 
+  ? new DatabaseStorage() 
+  : new MemStorage();

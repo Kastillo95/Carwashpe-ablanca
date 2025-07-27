@@ -1,16 +1,22 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from "@shared/schema";
+import path from 'path';
+import fs from 'fs';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+// Para aplicación portable: usar SQLite
+const isElectron = process.env.ELECTRON_MODE === 'true';
+const dbPath = isElectron 
+  ? process.env.DATABASE_URL?.replace('file:', '') || 'carwash.db'
+  : path.join(process.cwd(), 'carwash.db');
+
+// Asegurar que el directorio existe
+if (isElectron) {
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 }
 
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  ssl: false // Since we're using local PostgreSQL in Replit
-});
-
-export const db = drizzle(pool, { schema });
+export const sqlite = new Database(dbPath);
+export const db = drizzle(sqlite, { schema });

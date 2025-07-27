@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+      <rect width="256" height="256" fill="#2563eb" rx="32"/>
+      <path d="M64 192h128v16H64zm32-32h64v16H96zm-16-32h96v16H80zm8-32h80v16H88z" fill="white"/>
+      <text x="128" y="80" text-anchor="middle" fill="white" font-family="Arial" font-size="24" font-weight="bold">CW</text>
+    </svg>
