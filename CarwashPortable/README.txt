@@ -2,79 +2,59 @@
    CARWASH PEÑA BLANCA - SISTEMA DE GESTIÓN
 ==========================================
 
-🚀 INSTRUCCIONES DE USO:
+🚀 INSTRUCCIONES SIMPLES:
 
-1. EJECUTAR LA APLICACIÓN:
+1. PARA INICIAR:
    - Haz doble clic en "INICIAR-CARWASH.bat"
-   - Espera a que se abra la aplicación
-   - Se abrirá automáticamente en tu navegador en http://localhost:3001
+   - Se abrirá automáticamente en tu navegador
+   - ¡Listo para usar!
 
-2. ACCESO AL SISTEMA:
+2. PRIMERA VEZ:
+   - Si aparece error de Node.js, descarga desde: https://nodejs.org
+   - Instala Node.js y ejecuta nuevamente el archivo .bat
+
+3. ACCESO:
    - Contraseña de administrador: 742211010338
-   - Esta contraseña te permite crear servicios, gestionar inventario, etc.
+   - URL de la aplicación: http://localhost:3001
 
-📋 CARACTERÍSTICAS DEL SISTEMA:
+📋 QUÉ PUEDES HACER:
 
-✅ GESTIÓN DE CITAS:
-   - Programar citas de clientes
-   - Ver calendario de citas
-   - Marcar citas como completadas
+✅ Gestionar citas de clientes
+✅ Controlar servicios y precios  
+✅ Manejar inventario de productos
+✅ Crear facturas y reportes
+✅ Base de datos de clientes
+✅ Estadísticas de ventas
 
-✅ ADMINISTRACIÓN DE SERVICIOS:
-   - Crear y editar servicios de lavado
-   - Configurar precios y duración
-   - Activar/desactivar servicios
+💾 TUS DATOS:
 
-✅ CONTROL DE INVENTARIO:
-   - Registrar productos y suministros
-   - Control de stock y cantidades mínimas
-   - Códigos de barras para productos
+- Se guardan automáticamente en "CarwashData"
+- No necesitas internet
+- Para respaldo: copia la carpeta "CarwashData"
+- Funciona completamente sin conexión
 
-✅ FACTURACIÓN:
-   - Crear facturas rápidamente
-   - Imprimir o exportar facturas
-   - Historial de ventas
+🔧 REQUISITOS:
 
-✅ SISTEMA CRM:
-   - Base de datos de clientes
-   - Historial de servicios por cliente
-   - Promociones y marketing
+✅ Windows 7 o superior
+✅ Node.js (se descarga gratis de nodejs.org)
+✅ 500 MB de espacio
 
-✅ REPORTES:
-   - Estadísticas del día
-   - Reportes de ventas por período
-   - Exportar datos a Excel/CSV
+📞 ¿PROBLEMAS?
 
-💾 DATOS Y RESPALDOS:
+• Si no abre: Instala Node.js desde nodejs.org
+• Si aparece error de puerto: Cierra otros programas que usen puerto 3001
+• Para cerrar: Presiona Ctrl+C en la ventana de comandos
 
-- Todos los datos se guardan en la carpeta "CarwashData"
-- No requiere internet para funcionar
-- Respaldo automático de la base de datos
-- Para hacer respaldo: copia la carpeta "CarwashData"
+🎯 PARA USAR EN OTRA PC:
 
-🔧 REQUISITOS TÉCNICOS:
+1. Copia toda la carpeta "CarwashPortable"
+2. Instala Node.js en la otra PC si es necesario
+3. Ejecuta "INICIAR-CARWASH.bat"
+4. ¡Funciona igual!
 
-- Windows 7 o superior
-- Node.js 16 o superior (se instala automáticamente)
-- 500 MB de espacio libre
-- NO requiere internet para funcionar
-
-📞 SOPORTE:
-
-- El sistema está listo para usar inmediatamente
-- Servicios básicos de carwash ya precargados
-- Inventario inicial incluido
-- Si hay problemas, verifica que Node.js esté instalado
-
-🎯 CONSEJOS DE USO:
-
-1. Siempre usa la contraseña de admin para cambios importantes
-2. Haz respaldos periódicos de la carpeta "CarwashData"
-3. Para usar en otra PC, copia toda la carpeta "CarwashPortable"
-4. La aplicación abre en navegador pero es completamente local
-
-¡Disfruta usando tu sistema de gestión de carwash!
+CONTRASEÑA IMPORTANTE: 742211010338
 
 ==========================================
-Sistema creado para Carwash Peña Blanca
+Sistema listo para Carwash Peña Blanca
+¡Simple, rápido y fácil de usar!
 ==========================================
