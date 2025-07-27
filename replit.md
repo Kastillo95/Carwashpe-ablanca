@@ -44,3 +44,12 @@ This is a comprehensive carwash management system with inventory, appointment bo
 2. Include automatic installer for Windows
 3. Package as desktop application (no browser dependency)
 4. Provide simple double-click installation experience
+
+## Java Version Development
+- [In Progress] Converting entire system to Java with JavaFX desktop interface
+- [Completed] Created Maven project structure with Spring Boot + JavaFX
+- [Completed] Implemented JPA entities for all database models
+- [Completed] Created repository layer with Spring Data JPA
+- [Completed] Built service layer for business logic
+- [Completed] Designed JavaFX UI with modern CSS styling
+- [In Progress] Implementing remaining controllers and views

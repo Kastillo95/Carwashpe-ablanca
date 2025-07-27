@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <!-- Appointments Header -->
+      <HBox alignment="CENTER_LEFT" spacing="20.0">
+         <children>
+            <Label text="📅 Gestión de Citas" styleClass="card-title">
+               <font>
+                  <Font name="Arial Bold" size="20.0" />
+               </font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="+ Nueva Cita" styleClass="primary-button" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </VBox.margin>
+      </HBox>
+      
+      <!-- Filters and Search -->
+      <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="card">
+         <children>
+            <Label text="Filtros:" />
+            <DatePicker fx:id="dateFilter" promptText="Seleccionar fecha" />
+            <ComboBox fx:id="statusFilter" prefWidth="150.0" promptText="Estado" />
+            <TextField fx:id="searchField" prefWidth="200.0" promptText="Buscar cliente..." />
+            <Button text="🔍 Buscar" styleClass="secondary-button" />
+            <Button text="🔄 Limpiar" styleClass="secondary-button" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" />
+         </VBox.margin>
+      </HBox>
+      
+      <!-- Appointments Table -->
+      <VBox styleClass="card">
+         <children>
+            <TableView fx:id="appointmentsTable" VBox.vgrow="ALWAYS">
+               <columns>
+                  <TableColumn prefWidth="80.0" text="ID" />
+                  <TableColumn prefWidth="100.0" text="Fecha" />
+                  <TableColumn prefWidth="80.0" text="Hora" />
+                  <TableColumn prefWidth="180.0" text="Cliente" />
+                  <TableColumn prefWidth="120.0" text="Teléfono" />
+                  <TableColumn prefWidth="150.0" text="Servicio" />
+                  <TableColumn prefWidth="100.0" text="Estado" />
+                  <TableColumn prefWidth="200.0" text="Acciones" />
+               </columns>
+            </TableView>
+         </children>
+         <VBox.margin>
+            <Insets left="20.0" right="20.0" bottom="20.0" />
+         </VBox.margin>
+      </VBox>
+   </children>
+</VBox>
