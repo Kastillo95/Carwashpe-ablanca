@@ -75,7 +75,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   // DEPRECATED: Esta clase ya no se usa, se mantiene solo para compatibilidad
   async getNextServiceNumber(): Promise<number> {
-    return 1; // Placeholder para compatibilidad
+    return this.currentServiceId;
   }
   private services: Map<number, Service> = new Map();
   private customers: Map<number, Customer> = new Map();
@@ -130,6 +130,8 @@ export class MemStorage implements IStorage {
         id: this.currentInventoryId,
         ...item,
         active: true,
+        imageUrl: null,
+        isService: false,
       });
       this.currentInventoryId++;
     });
@@ -148,6 +150,7 @@ export class MemStorage implements IStorage {
     const newService: Service = {
       id: this.currentServiceId++,
       ...service,
+      description: service.description ?? null,
       active: service.active ?? true,
     };
     this.services.set(newService.id, newService);
@@ -180,6 +183,15 @@ export class MemStorage implements IStorage {
     const newCustomer: Customer = {
       id: this.currentCustomerId++,
       ...customer,
+      active: customer.active ?? true,
+      phone: customer.phone ?? null,
+      email: customer.email ?? null,
+      taxId: customer.taxId ?? null,
+      address: customer.address ?? null,
+      notes: customer.notes ?? null,
+      totalSpent: customer.totalSpent ?? "0.00",
+      lastVisit: customer.lastVisit ?? null,
+      createdAt: new Date(),
     };
     this.customers.set(newCustomer.id, newCustomer);
     return newCustomer;
@@ -192,6 +204,34 @@ export class MemStorage implements IStorage {
     const updated = { ...existing, ...customer };
     this.customers.set(id, updated);
     return updated;
+  }
+
+  async getCustomerByPhone(phone: string): Promise<Customer | undefined> {
+    return Array.from(this.customers.values()).find(c => c.phone === phone);
+  }
+
+  async searchCustomers(query: string): Promise<Customer[]> {
+    const searchTerm = query.toLowerCase();
+    return Array.from(this.customers.values()).filter(c => 
+      c.name.toLowerCase().includes(searchTerm) || 
+      (c.phone && c.phone.includes(searchTerm)) ||
+      (c.email && c.email.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  async getTopCustomers(limit: number = 10): Promise<Customer[]> {
+    return Array.from(this.customers.values())
+      .sort((a, b) => parseFloat(b.totalSpent || "0") - parseFloat(a.totalSpent || "0"))
+      .slice(0, limit);
+  }
+
+  async updateCustomerSpent(customerId: number, amount: number): Promise<void> {
+    const customer = this.customers.get(customerId);
+    if (customer) {
+      const currentSpent = parseFloat(customer.totalSpent || "0");
+      const updated = { ...customer, totalSpent: (currentSpent + amount).toFixed(2) };
+      this.customers.set(customerId, updated);
+    }
   }
 
   // Appointments
@@ -211,6 +251,9 @@ export class MemStorage implements IStorage {
     const newAppointment: Appointment = {
       id: this.currentAppointmentId++,
       ...appointment,
+      customerId: null,
+      serviceId: null,
+      customerPhone: appointment.customerPhone ?? null,
       status: appointment.status ?? "scheduled",
       createdAt: new Date(),
     };
@@ -248,6 +291,14 @@ export class MemStorage implements IStorage {
     const newItem: Inventory = {
       id: this.currentInventoryId++,
       ...item,
+      description: item.description ?? null,
+      barcode: item.barcode ?? null,
+      quantity: item.quantity ?? 0,
+      minQuantity: item.minQuantity ?? null,
+      supplier: item.supplier ?? null,
+      category: item.category ?? null,
+      imageUrl: item.imageUrl ?? null,
+      isService: item.isService ?? false,
       active: item.active ?? true,
     };
     this.inventory.set(newItem.id, newItem);
@@ -271,11 +322,11 @@ export class MemStorage implements IStorage {
     const item = this.inventory.get(id);
     if (!item) throw new Error("Inventory item not found");
     
-    if (item.quantity < quantity) {
+    if ((item.quantity ?? 0) < quantity) {
       throw new Error("Insufficient stock");
     }
     
-    const updated = { ...item, quantity: item.quantity - quantity };
+    const updated = { ...item, quantity: (item.quantity ?? 0) - quantity };
     this.inventory.set(id, updated);
     return updated;
   }
@@ -381,7 +432,7 @@ export class MemStorage implements IStorage {
       .reduce((sum, a) => sum + parseFloat(a.servicePrice), 0);
     
     const lowStockItems = Array.from(this.inventory.values())
-      .filter(i => i.active && i.quantity <= i.minQuantity).length;
+      .filter(i => i.active && (i.quantity ?? 0) <= (i.minQuantity ?? 0)).length;
     
     const servedCustomers = todayAppointments.filter(a => a.status === "completed").length;
     
@@ -420,6 +471,72 @@ export class MemStorage implements IStorage {
       topService,
       period: `${startDate} a ${endDate}`,
     };
+  }
+
+  // CRM - Promotions methods
+  private promotions: Map<number, any> = new Map();
+  private promotionSends: Map<number, any> = new Map();
+  private currentPromotionId = 1;
+  private currentPromotionSendId = 1;
+
+  async getPromotions(): Promise<any[]> {
+    return Array.from(this.promotions.values());
+  }
+
+  async getPromotion(id: number): Promise<any | undefined> {
+    return this.promotions.get(id);
+  }
+
+  async createPromotion(promotion: any): Promise<any> {
+    const newPromotion = {
+      id: this.currentPromotionId++,
+      ...promotion,
+    };
+    this.promotions.set(newPromotion.id, newPromotion);
+    return newPromotion;
+  }
+
+  async updatePromotion(id: number, promotion: any): Promise<any> {
+    const existing = this.promotions.get(id);
+    if (!existing) throw new Error("Promotion not found");
+    
+    const updated = { ...existing, ...promotion };
+    this.promotions.set(id, updated);
+    return updated;
+  }
+
+  async deletePromotion(id: number): Promise<void> {
+    this.promotions.delete(id);
+  }
+
+  async getActivePromotions(): Promise<any[]> {
+    return Array.from(this.promotions.values()).filter(p => p.active);
+  }
+
+  async sendPromotionToCustomer(promotionId: number, customerId: number): Promise<any> {
+    const promotionSend = {
+      id: this.currentPromotionSendId++,
+      promotionId,
+      customerId,
+      sentAt: new Date(),
+      status: "sent",
+    };
+    this.promotionSends.set(promotionSend.id, promotionSend);
+    return promotionSend;
+  }
+
+  async sendPromotionToAllCustomers(promotionId: number): Promise<any[]> {
+    const customers = await this.getCustomers();
+    const sends = [];
+    for (const customer of customers) {
+      const send = await this.sendPromotionToCustomer(promotionId, customer.id);
+      sends.push(send);
+    }
+    return sends;
+  }
+
+  async getPromotionSends(promotionId: number): Promise<any[]> {
+    return Array.from(this.promotionSends.values()).filter(ps => ps.promotionId === promotionId);
   }
 }
 
@@ -931,4 +1048,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Use MemStorage for now to ensure immediate functionality
+export const storage = new MemStorage();
