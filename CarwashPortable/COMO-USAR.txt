@@ -1,0 +1,56 @@
+========================================
+  CARWASH PEÑA BLANCA - INSTRUCCIONES
+========================================
+
+✅ APLICACIÓN LISTA PARA USAR
+
+📁 ARCHIVOS INCLUIDOS:
+├── CarwashPenaBlanca.exe         ← Aplicación empaquetada (37MB)
+├── EJECUTAR-APLICACION.bat       ← Versión mejorada (RECOMENDADA)
+├── INICIAR-CARWASH.bat           ← Versión original
+├── INSTALAR.bat                  ← Instalador automático
+└── dist/                         ← Archivos de la aplicación
+
+🚀 CÓMO USAR (3 OPCIONES):
+
+OPCIÓN 1: RECOMENDADA ⭐
+→ Haz doble clic en "EJECUTAR-APLICACION.bat"
+→ Se abre automáticamente en el navegador
+→ Funciona como aplicación web local
+
+OPCIÓN 2: Aplicación empaquetada
+→ Haz doble clic en "CarwashPenaBlanca.exe"
+→ (Nota: Puede abrir ventana de comandos)
+
+OPCIÓN 3: Instalación completa
+→ Haz doble clic en "INSTALAR.bat"
+→ Se instala como programa en Windows
+→ Crea acceso directo en escritorio
+
+🔐 DATOS IMPORTANTES:
+• Contraseña de administrador: 742211010338
+• Datos se guardan en: CarwashData/carwash.db
+• URL local: http://localhost:3001
+
+💾 CARACTERÍSTICAS:
+✅ Sistema completo de gestión de carwash
+✅ Base de datos SQLite local (no requiere internet)
+✅ Gestión de citas y calendario
+✅ Control de inventario
+✅ Sistema de facturación
+✅ Reportes y estadísticas
+✅ Exportación a Excel
+
+📋 REQUISITOS:
+• Windows 7/8/10/11
+• Node.js (se instala automáticamente si es necesario)
+
+🎯 PARA COPIAR A OTRA PC:
+1. Copia toda la carpeta "CarwashPortable"
+2. En la nueva PC, usa cualquiera de las 3 opciones
+3. ¡Funciona inmediatamente!
+
+========================================
+Sistema creado específicamente para 
+uso independiente sin conexión a internet
+========================================

@@ -1,106 +1,95 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const waitOn = require('wait-on');
+const fs = require('fs');
 
-// Mantener referencia global de la ventana
 let mainWindow;
 let serverProcess;
 
-// Configurar directorio de datos portable
-const isPortable = process.env.PORTABLE === 'true' || process.argv.includes('--portable');
-if (isPortable) {
-  const portableDir = path.join(process.execPath, '..', 'CarwashData');
-  app.setPath('userData', portableDir);
+// Configurar entorno
+process.env.NODE_ENV = 'production';
+process.env.PORT = '3001';
+
+function createDataDirectory() {
+  const dataDir = path.join(process.cwd(), 'CarwashData');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  const dbPath = path.join(dataDir, 'carwash.db');
+  process.env.DATABASE_URL = 'file:' + dbPath;
+  return dataDir;
+}
+
+function startServer() {
+  return new Promise((resolve) => {
+    const serverPath = path.join(__dirname, 'dist', 'index.js');
+    
+    console.log('Iniciando servidor backend...');
+    serverProcess = spawn('node', [serverPath], {
+      stdio: 'pipe',
+      env: { ...process.env }
+    });
+
+    serverProcess.stdout.on('data', (data) => {
+      console.log('Backend:', data.toString());
+      if (data.toString().includes('serving on port')) {
+        resolve();
+      }
+    });
+
+    serverProcess.stderr.on('data', (data) => {
+      console.error('Backend Error:', data.toString());
+    });
+
+    // Timeout de seguridad
+    setTimeout(() => resolve(), 3000);
+  });
 }
 
 function createWindow() {
-  // Crear la ventana del navegador
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: true
+      contextIsolation: true
     },
-    show: false,
-    titleBarStyle: 'default',
-    title: 'Carwash Peña Blanca - Sistema de Gestión'
+    title: 'Carwash Peña Blanca',
+    show: false
   });
 
-  // Remover menu bar (opcional)
-  Menu.setApplicationMenu(null);
+  mainWindow.loadURL('http://localhost:3001');
 
-  // Mostrar ventana cuando esté lista
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    mainWindow.focus();
-  });
-
-  // Manejar enlaces externos
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
+    console.log('Aplicación iniciada correctamente');
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
-  });
-
-  return mainWindow;
-}
-
-function startServer() {
-  return new Promise((resolve, reject) => {
-    // Iniciar el servidor Express
-    // En producción, usar el archivo construido
-    const serverScript = 'dist/index.js';
-    const command = 'node';
-    
-    serverProcess = spawn(command, [serverScript], {
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        PORT: '3001',
-        ELECTRON_MODE: 'true',
-        VITE_ADMIN_PASSWORD: '742211010338',
-        DATABASE_URL: `file:${path.join(app.getPath('userData'), 'carwash.db')}`
-      },
-      stdio: 'inherit'
-    });
-
-    serverProcess.on('error', (error) => {
-      console.error('Error starting server:', error);
-      reject(error);
-    });
-
-    // Esperar a que el servidor esté listo
-    waitOn({
-      resources: ['http://localhost:3001'],
-      delay: 1000,
-      interval: 100,
-      timeout: 30000
-    }).then(() => {
-      resolve();
-    }).catch(reject);
+    if (serverProcess) {
+      serverProcess.kill();
+    }
   });
 }
 
 app.whenReady().then(async () => {
   try {
+    console.log('Iniciando Carwash Peña Blanca...');
+    
+    // Crear directorio de datos
+    const dataDir = createDataDirectory();
+    console.log('Datos en:', dataDir);
+    
     // Iniciar servidor
     await startServer();
+    console.log('Servidor iniciado');
     
     // Crear ventana
     createWindow();
     
-    // Cargar la aplicación
-    mainWindow.loadURL('http://localhost:3001');
-    
   } catch (error) {
-    console.error('Error starting application:', error);
+    console.error('Error al iniciar:', error);
     app.quit();
   }
 });
@@ -109,19 +98,11 @@ app.on('window-all-closed', () => {
   if (serverProcess) {
     serverProcess.kill();
   }
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  }
-});
-
-app.on('before-quit', () => {
-  if (serverProcess) {
-    serverProcess.kill();
   }
 });

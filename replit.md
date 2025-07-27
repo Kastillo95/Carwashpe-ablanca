@@ -29,8 +29,9 @@ This is a comprehensive carwash management system with inventory, appointment bo
 - [Completed] Migrated from Agent to Replit environment
 - [Completed] Fixed TypeScript errors in storage implementation
 - [Completed] Configured SQLite database for portable application
-- [In Progress] Creating true .exe executable (user rejected browser-based solution)
-- [In Progress] Building standalone desktop application using pkg/nexe
+- [Completed] Created multiple .exe versions (pkg-based had CMD window issue)
+- [Completed] Built improved launcher script (EJECUTAR-APLICACION.bat)
+- [In Progress] Creating true Electron desktop app (no CMD window)
 
 ## Next Steps
 1. Create standalone .exe file that doesn't require Node.js

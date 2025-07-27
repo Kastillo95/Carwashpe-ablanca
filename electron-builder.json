@@ -2,39 +2,35 @@
   "appId": "com.carwash.penablanca",
   "productName": "Carwash Peña Blanca",
   "directories": {
-    "output": "build"
+    "output": "CarwashPortable"
   },
   "files": [
-    "dist/**/*",
     "electron-main.js",
-    "node_modules/**/*",
-    "assets/**/*"
-  ],
-  "extraResources": [
-    {
-      "from": "assets",
-      "to": "assets"
-    }
+    "dist/**/*",
+    "node_modules/**/*"
   ],
   "win": {
-    "target": "portable",
-    "icon": "assets/icon.ico"
+    "target": [
+      {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
+      },
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ]
   },
   "portable": {
     "artifactName": "CarwashPenaBlanca-Portable.exe"
   },
-  "linux": {
-    "target": "AppImage",
-    "icon": "assets/icon.png"
-  },
-  "mac": {
-    "target": "dmg",
-    "icon": "assets/icon.icns"
-  },
   "nsis": {
+    "artifactName": "CarwashPenaBlanca-Setup.exe",
     "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true
+    "allowToChangeInstallationDirectory": true
   }
 }
