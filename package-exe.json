@@ -1,0 +1,18 @@
+{
+  "name": "carwash-pena-blanca",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
+  "pkg": {
+    "scripts": [
+      "dist/**/*.js"
+    ],
+    "assets": [
+      "dist/public/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "build"
+  }
+}

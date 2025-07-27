@@ -1,122 +1,220 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
-console.log('🚀 Creando aplicación portable súper simple...\n');
+console.log('🔨 Creando aplicación ejecutable real (.exe) para Windows...\n');
 
-// Crear carpeta para la aplicación portable
-const appDir = './CarwashPortable';
-if (fs.existsSync(appDir)) {
-  fs.rmSync(appDir, { recursive: true });
-}
-fs.mkdirSync(appDir);
-
-console.log('📦 Copiando archivos necesarios...');
-
-// Copiar archivos de la aplicación construida
-execSync(`cp -r dist ${appDir}/`);
-execSync(`cp electron-main.js ${appDir}/`);
-execSync(`cp package.json ${appDir}/`);
-
-// Crear un package.json simplificado
-const simplePackage = {
-  "name": "carwash-portable",
-  "version": "1.0.0",
-  "main": "electron-main.js",
-  "dependencies": {
-    "electron": "^37.2.4",
-    "express": "^4.21.2",
-    "better-sqlite3": "^9.0.0",
-    "drizzle-orm": "^0.39.1"
+try {
+  // 1. Verificar que la aplicación esté construida
+  if (!fs.existsSync('dist/index.js')) {
+    console.log('📦 Construyendo aplicación...');
+    execSync('npm run build', { stdio: 'inherit' });
   }
-};
 
-fs.writeFileSync(path.join(appDir, 'package.json'), JSON.stringify(simplePackage, null, 2));
+  // 2. Crear configuración para pkg (empaquetador de Node.js)
+  const pkgConfig = {
+    "name": "carwash-pena-blanca",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "bin": "dist/index.js",
+    "pkg": {
+      "scripts": ["dist/**/*.js"],
+      "assets": ["dist/public/**/*"],
+      "targets": ["node18-win-x64"],
+      "outputPath": "build"
+    }
+  };
 
-// Crear script de inicio
-const startScript = `@echo off
-echo 🚀 Iniciando Carwash Peña Blanca...
+  fs.writeFileSync('package-exe.json', JSON.stringify(pkgConfig, null, 2));
+
+  // 3. Crear script de inicio para la aplicación empaquetada
+  const launcherScript = `const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+// Configurar variables de entorno
+process.env.NODE_ENV = 'production';
+process.env.PORT = '3001';
+process.env.ELECTRON_MODE = 'true';
+
+// Crear directorio de datos
+const dataDir = path.join(process.cwd(), 'CarwashData');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+process.env.DATABASE_URL = \`file:\${path.join(dataDir, 'carwash.db')}\`;
+
+console.log('🚀 Iniciando Carwash Peña Blanca...');
+console.log('📁 Datos en:', dataDir);
+
+// Función para abrir navegador
+function openBrowser(url) {
+  const start = process.platform === 'darwin' ? 'open' : 
+                process.platform === 'win32' ? 'start ""' : 'xdg-open';
+  
+  setTimeout(() => {
+    try {
+      require('child_process').exec(\`\${start} \${url}\`);
+    } catch (error) {
+      console.log('Abre manualmente:', url);
+    }
+  }, 2000);
+}
+
+// Iniciar servidor
+require('./dist/index.js');
+
+// Abrir navegador después de que el servidor esté listo
+openBrowser('http://localhost:3001');
+
+console.log('✅ Aplicación iniciada en http://localhost:3001');
+console.log('🔐 Contraseña de admin: 742211010338');
+console.log('📊 Para cerrar la aplicación, presiona Ctrl+C');`;
+
+  fs.writeFileSync('launcher.js', launcherScript);
+
+  // 4. Instalar pkg si no está disponible
+  try {
+    execSync('pkg --version', { stdio: 'ignore' });
+  } catch {
+    console.log('📦 Instalando empaquetador pkg...');
+    execSync('npm install -g pkg', { stdio: 'inherit' });
+  }
+
+  // 5. Crear el ejecutable
+  console.log('🔨 Creando ejecutable (.exe)...');
+  console.log('Esto puede tomar unos minutos...\n');
+
+  // Usar pkg para crear el ejecutable
+  execSync('pkg launcher.js --targets node18-win-x64 --output build/CarwashPenaBlanca.exe', { 
+    stdio: 'inherit' 
+  });
+
+  // 6. Crear instalador simple
+  console.log('📁 Creando carpeta de distribución...');
+  
+  if (!fs.existsSync('build')) fs.mkdirSync('build');
+  
+  // Copiar archivos necesarios
+  if (fs.existsSync('dist/public')) {
+    execSync('cp -r dist/public build/', { stdio: 'ignore' });
+  }
+
+  // Crear script de instalación
+  const installScript = `@echo off
 echo.
-echo ⏳ Espera un momento mientras se carga...
+echo ========================================
+echo   INSTALADOR CARWASH PEÑA BLANCA
+echo ========================================
 echo.
 
-REM Verificar si Node.js está instalado
-node --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ❌ Node.js no está instalado en este sistema
-    echo.
-    echo 💡 Descarga e instala Node.js desde: https://nodejs.org
-    echo    (Versión recomendada: LTS)
-    echo.
-    pause
-    exit /b 1
-)
+set INSTALL_DIR=%ProgramFiles%\\CarwashPenaBlanca
+set DESKTOP=%USERPROFILE%\\Desktop
 
-REM Instalar dependencias si no existen
-if not exist "node_modules" (
-    echo 📦 Instalando componentes necesarios...
-    npm install --production --silent
-)
+echo Instalando en: %INSTALL_DIR%
+echo.
 
-REM Iniciar la aplicación
-echo ✅ Abriendo aplicación...
-npm start
+REM Crear directorio de instalación
+if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
 
+REM Copiar archivos
+copy "CarwashPenaBlanca.exe" "%INSTALL_DIR%\\"
+if exist "public" xcopy "public" "%INSTALL_DIR%\\public\\" /E /I /Y
+
+REM Crear acceso directo en escritorio
+echo [InternetShortcut] > "%DESKTOP%\\Carwash Peña Blanca.url"
+echo URL=file:///%INSTALL_DIR%\\CarwashPenaBlanca.exe >> "%DESKTOP%\\Carwash Peña Blanca.url"
+
+echo.
+echo ✅ Instalación completada!
+echo.
+echo 🖥️  Acceso directo creado en el escritorio
+echo 📁 Instalado en: %INSTALL_DIR%
+echo 🔐 Contraseña de admin: 742211010338
+echo.
+echo Para ejecutar: Doble clic en "Carwash Peña Blanca" en el escritorio
+echo.
 pause`;
 
-fs.writeFileSync(path.join(appDir, 'INICIAR-CARWASH.bat'), startScript);
+  fs.writeFileSync('build/INSTALAR.bat', installScript);
 
-// Crear README simple
-const readme = `# 🚗 Carwash Peña Blanca - Aplicación Portable
+  // 7. Crear README para el ejecutable
+  const readmeExe = `# CARWASH PEÑA BLANCA - APLICACIÓN EJECUTABLE
 
-## 📋 INSTRUCCIONES SÚPER FÁCILES:
+## ✅ APLICACIÓN LISTA PARA INSTALAR
 
-### 1️⃣ PRIMERA VEZ (Solo una vez):
-- Descarga e instala Node.js desde: https://nodejs.org (elige la versión LTS)
-- Es una instalación normal de Windows, siguiente-siguiente-finalizar
+### 📁 Archivos incluidos:
+- CarwashPenaBlanca.exe     ← Aplicación principal
+- INSTALAR.bat              ← Instalador automático
+- public/                   ← Archivos de la interfaz
 
-### 2️⃣ USAR LA APLICACIÓN:
-- Haz doble clic en: **INICIAR-CARWASH.bat**
-- Espera unos segundos
-- Se abrirá automáticamente en tu navegador
-- ¡Listo para usar!
+### 🚀 INSTALACIÓN AUTOMÁTICA:
+1. Haz doble clic en "INSTALAR.bat"
+2. Se instalará automáticamente en Archivos de Programa
+3. Se creará acceso directo en el escritorio
+4. ¡Listo para usar!
 
-### 🔄 USAR EN OTRA PC:
-- Copia toda esta carpeta "CarwashPortable"
-- Instala Node.js en la nueva PC (solo la primera vez)
-- Ejecuta INICIAR-CARWASH.bat
+### 🖥️ USO MANUAL (sin instalar):
+1. Doble clic en "CarwashPenaBlanca.exe"
+2. Se abre automáticamente en tu navegador
+3. URL: http://localhost:3001
 
-### 💾 TUS DATOS:
-- Se guardan automáticamente en: carwash.db
-- Están dentro de esta misma carpeta
-- Para hacer backup: copia el archivo carwash.db
+### 🔐 ACCESO:
+- Contraseña de administrador: 742211010338
 
-### 🆘 SI NO FUNCIONA:
-- Verifica que Node.js esté instalado
-- Ejecuta desde cmd para ver errores
-- Algunos antivirus pueden bloquearlo
+### 💾 DATOS:
+- Se crean automáticamente en carpeta "CarwashData"
+- Base de datos SQLite local
+- No requiere internet
 
-## ✅ VENTAJAS:
-- Solo necesitas Node.js (instalación única)
-- Todos tus datos en una carpeta
-- Copia la carpeta = tienes todo tu sistema
-- Funciona sin internet
-- Incluye todas las funciones completas
+### ✅ CARACTERÍSTICAS:
+- ✅ Ejecutable independiente (.exe)
+- ✅ No requiere Node.js instalado
+- ✅ Instalador automático incluido
+- ✅ Acceso directo en escritorio
+- ✅ Base de datos local
+- ✅ Funciona sin internet
+- ✅ Sistema completo de gestión
 
-¡Tu sistema profesional de carwash listo para usar! 🎉`;
+¡Tu aplicación está lista para distribuir!`;
 
-fs.writeFileSync(path.join(appDir, 'README.txt'), readme);
+  fs.writeFileSync('build/README-EJECUTABLE.txt', readmeExe);
 
-// Crear script para npm start
-const packageJsonPath = path.join(appDir, 'package.json');
-const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-pkg.scripts = {
-  "start": "node electron-main.js"
-};
-fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
+  console.log('\n✅ ¡EJECUTABLE CREADO EXITOSAMENTE!');
+  console.log('\n📁 Ubicación: build/CarwashPenaBlanca.exe');
+  console.log('\n🎉 Características del ejecutable:');
+  console.log('   • ✅ Archivo .exe independiente');
+  console.log('   • ✅ NO requiere Node.js');
+  console.log('   • ✅ NO requiere instalación');
+  console.log('   • ✅ Instalador automático incluido');
+  console.log('   • ✅ Acceso directo en escritorio');
+  console.log('   • ✅ Base de datos SQLite integrada');
+  console.log('   • ✅ Funciona completamente sin internet');
+  console.log('\n📋 Para distribuir:');
+  console.log('   1. Copia la carpeta "build" completa');
+  console.log('   2. En la PC de destino, ejecuta "INSTALAR.bat"');
+  console.log('   3. O ejecuta directamente "CarwashPenaBlanca.exe"');
+  console.log('\n🔐 Contraseña de admin: 742211010338');
 
-console.log('✅ ¡Aplicación portable creada!');
-console.log('📁 Ubicación: ./CarwashPortable/');
-console.log('🎉 Para usar: ejecuta INICIAR-CARWASH.bat');
-console.log('');
-console.log('🚀 Tu aplicación está lista para copiar a cualquier PC');
+} catch (error) {
+  console.error('\n❌ Error creando ejecutable:', error.message);
+  console.log('\n💡 Intentando método alternativo...');
+  
+  // Método alternativo usando nexe
+  try {
+    console.log('📦 Instalando nexe...');
+    execSync('npm install -g nexe', { stdio: 'inherit' });
+    
+    console.log('🔨 Creando ejecutable con nexe...');
+    execSync('nexe dist/index.js -t windows-x64-18.20.4 -o build/CarwashPenaBlanca.exe', { 
+      stdio: 'inherit' 
+    });
+    
+    console.log('\n✅ Ejecutable creado con método alternativo!');
+  } catch (nexeError) {
+    console.error('\n❌ Error con método alternativo:', nexeError.message);
+    console.log('\n🔧 Solución manual:');
+    console.log('   1. Instala pkg globalmente: npm install -g pkg');
+    console.log('   2. Ejecuta: pkg dist/index.js --targets node18-win-x64 --output build/CarwashPenaBlanca.exe');
+  }
+}
