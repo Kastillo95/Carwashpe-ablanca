@@ -1,7 +1,8 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const waitOn = require('wait-on');
+const express = require('express');
+const fs = require('fs');
 
 // Mantener referencia global de la ventana
 let mainWindow;
@@ -54,37 +55,48 @@ function createWindow() {
 
 function startServer() {
   return new Promise((resolve, reject) => {
-    // Iniciar el servidor Express
-    // En producción, usar el archivo construido
-    const serverScript = 'dist/index.js';
-    const command = 'node';
-    
-    serverProcess = spawn(command, [serverScript], {
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        PORT: '3001',
-        ELECTRON_MODE: 'true',
-        VITE_ADMIN_PASSWORD: '742211010338',
-        DATABASE_URL: `file:${path.join(app.getPath('userData'), 'carwash.db')}`
-      },
-      stdio: 'inherit'
-    });
-
-    serverProcess.on('error', (error) => {
-      console.error('Error starting server:', error);
+    try {
+      console.log('🚀 Iniciando servidor interno...');
+      
+      // Crear servidor Express simple
+      const server = express();
+      const port = 3001;
+      
+      // Configurar archivos estáticos
+      const staticPath = path.join(__dirname, 'dist', 'public');
+      if (fs.existsSync(staticPath)) {
+        server.use(express.static(staticPath));
+      }
+      
+      // Ruta principal
+      server.get('/', (req, res) => {
+        const indexPath = path.join(__dirname, 'dist', 'public', 'index.html');
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.send(`
+            <h1>🚗 Carwash Peña Blanca</h1>
+            <p>Sistema inicializando...</p>
+            <p>Si ves este mensaje, la aplicación está funcionando.</p>
+          `);
+        }
+      });
+      
+      // API básica para probar
+      server.get('/api/test', (req, res) => {
+        res.json({ status: 'ok', message: '¡Servidor funcionando!' });
+      });
+      
+      // Iniciar servidor
+      server.listen(port, '127.0.0.1', () => {
+        console.log(`✅ Servidor iniciado en http://localhost:${port}`);
+        resolve();
+      });
+      
+    } catch (error) {
+      console.error('❌ Error iniciando servidor:', error);
       reject(error);
-    });
-
-    // Esperar a que el servidor esté listo
-    waitOn({
-      resources: ['http://localhost:3001'],
-      delay: 1000,
-      interval: 100,
-      timeout: 30000
-    }).then(() => {
-      resolve();
-    }).catch(reject);
+    }
   });
 }
 
