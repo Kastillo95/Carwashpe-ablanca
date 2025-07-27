@@ -1,4 +1,4 @@
-export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "";
+export const ADMIN_PASSWORD = "742211010338";
 
 export const BUSINESS_INFO = {
   name: "Carwash Peña Blanca",
