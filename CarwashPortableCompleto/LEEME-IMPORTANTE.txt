@@ -1,0 +1,98 @@
+====================================================
+        CARWASH PEÑA BLANCA - VERSIÓN COMPLETA
+====================================================
+
+🎯 ESTA VERSIÓN INCLUYE TODO LO NECESARIO
+
+✅ Sistema completo compilado
+✅ Base de datos SQLite integrada  
+✅ Interfaz web moderna
+✅ Todas las funciones del sistema
+
+====================================================
+
+🚀 CÓMO USAR:
+
+OPCIÓN 1 - MÁS FÁCIL:
+1. Doble clic en: INICIAR-CARWASH-SIMPLE.bat
+2. El sistema te guiará paso a paso
+
+OPCIÓN 2 - MANUAL:
+1. Asegúrate de tener Node.js instalado
+2. Doble clic en: INICIAR-CARWASH-SIMPLE.bat
+
+====================================================
+
+📋 REQUISITOS:
+
+• Windows 7 o superior
+• Node.js (se descarga gratis de nodejs.org)
+• 100MB espacio libre
+• Navegador web (Chrome, Firefox, Edge)
+
+====================================================
+
+🔑 DATOS DEL SISTEMA:
+
+• CONTRASEÑA ADMIN: 742211010338
+• URL LOCAL: http://localhost:3001
+• NEGOCIO: Carwash Peña Blanca
+• TELÉFONO: +504 9464-8987
+
+====================================================
+
+✨ FUNCIONES INCLUIDAS:
+
+✅ Dashboard con estadísticas
+✅ Gestión de citas y reservas
+✅ Control de clientes (CRM)
+✅ Inventario de productos
+✅ Facturación automática
+✅ Catálogo de servicios
+✅ Reportes y análisis
+
+====================================================
+
+🛠️ SOLUCIÓN DE PROBLEMAS:
+
+PROBLEMA: "Node.js no encontrado"
+SOLUCIÓN: 
+1. Ve a https://nodejs.org
+2. Descarga la versión LTS (recomendada)
+3. Instala y reinicia la PC
+4. Ejecuta nuevamente el sistema
+
+PROBLEMA: "Puerto ocupado"
+SOLUCIÓN:
+1. Cierra otras aplicaciones web
+2. Reinicia la PC
+3. Ejecuta solo este sistema
+
+PROBLEMA: No abre el navegador
+SOLUCIÓN:
+1. Abre manualmente tu navegador
+2. Ve a: http://localhost:3001
+3. Usa contraseña: 742211010338
+
+====================================================
+
+📞 ALTERNATIVAS:
+
+Si esta versión no funciona:
+
+1. USA LA VERSIÓN WEB:
+   • Funciona desde cualquier navegador
+   • No necesita instalaciones
+   • Mismas funciones
+
+2. VERSIÓN JAVA (Solicítala):
+   • Aplicación de escritorio nativa
+   • No usa navegador
+   • Muy estable
+
+====================================================
+
+¡LISTO PARA GESTIONAR TU CARWASH!
+
+Contraseña: 742211010338
+====================================================
