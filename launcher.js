@@ -2,41 +2,73 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-// Configurar variables de entorno
-process.env.NODE_ENV = 'production';
-process.env.PORT = '3001';
-process.env.ELECTRON_MODE = 'true';
+console.log('🚀 Iniciando Sistema de Lavado Peña Blanca...');
 
-// Crear directorio de datos
-const dataDir = path.join(process.cwd(), 'CarwashData');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-process.env.DATABASE_URL = `file:${path.join(dataDir, 'carwash.db')}`;
-
-console.log('🚀 Iniciando Carwash Peña Blanca...');
-console.log('📁 Datos en:', dataDir);
-
-// Función para abrir navegador
-function openBrowser(url) {
-  const start = process.platform === 'darwin' ? 'open' : 
-                process.platform === 'win32' ? 'start ""' : 'xdg-open';
-  
-  setTimeout(() => {
-    try {
-      require('child_process').exec(`${start} ${url}`);
-    } catch (error) {
-      console.log('Abre manualmente:', url);
-    }
-  }, 2000);
+// Verificar si las dependencias están instaladas
+if (!fs.existsSync(path.join(__dirname, 'node_modules'))) {
+    console.log('📦 Instalando dependencias por primera vez...');
+    const install = spawn('npm', ['install'], { 
+        stdio: 'inherit',
+        shell: true,
+        cwd: __dirname
+    });
+    
+    install.on('close', (code) => {
+        if (code === 0) {
+            startApplication();
+        } else {
+            console.error('❌ Error instalando dependencias');
+            process.exit(1);
+        }
+    });
+} else {
+    startApplication();
 }
 
-// Iniciar servidor
-require('./dist/index.js');
-
-// Abrir navegador después de que el servidor esté listo
-openBrowser('http://localhost:3001');
-
-console.log('✅ Aplicación iniciada en http://localhost:3001');
-console.log('🔐 Contraseña de admin: 742211010338');
-console.log('📊 Para cerrar la aplicación, presiona Ctrl+C');
+function startApplication() {
+    console.log('🌐 Iniciando servidor...');
+    
+    // Iniciar servidor sin mostrar ventana
+    const server = spawn('npm', ['run', 'dev'], {
+        stdio: 'pipe',
+        shell: true,
+        cwd: __dirname,
+        detached: false
+    });
+    
+    server.stdout.on('data', (data) => {
+        const output = data.toString();
+        if (output.includes('serving on port')) {
+            console.log('✅ Servidor iniciado exitosamente');
+            console.log('🌐 Abriendo navegador...');
+            
+            // Abrir navegador después de un delay
+            setTimeout(() => {
+                const { exec } = require('child_process');
+                exec('start http://localhost:5000');
+                
+                console.log('📊 Sistema Peña Blanca - ACTIVO');
+                console.log('🔗 URL: http://localhost:5000');
+                console.log('💾 Base de datos: SQLite local');
+                console.log('✅ Funcionando completamente offline');
+                console.log('\n--- Para cerrar presiona Ctrl+C ---');
+            }, 2000);
+        }
+    });
+    
+    server.stderr.on('data', (data) => {
+        console.error(`Error: ${data}`);
+    });
+    
+    server.on('close', (code) => {
+        console.log(`\n🔴 Sistema cerrado con código: ${code}`);
+        process.exit(code);
+    });
+    
+    // Manejar Ctrl+C
+    process.on('SIGINT', () => {
+        console.log('\n🔴 Cerrando Sistema de Lavado Peña Blanca...');
+        server.kill();
+        process.exit(0);
+    });
+}

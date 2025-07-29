@@ -23,6 +23,9 @@ This is a comprehensive carwash management system with inventory, appointment bo
 - MULTI-PC INSTALLATION - wants to install on multiple computers
 - Portable and easily transferable between machines
 - Complete data backup and migration capabilities
+- NO CMD WINDOW - wants program to open directly without showing command prompt
+- Wants desktop shortcut that works like normal Windows program
+- Professional appearance without technical windows visible
 
 ## Project Architecture
 - **Frontend:** React SPA with Wouter routing in `client/src/`
