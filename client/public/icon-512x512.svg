@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#0079F2"/>
+  <g fill="white">
+    <!-- Car icon scaled up -->
+    <path d="M128 256h42l22-42h128l22 42h42c23.5 0 42 19.1 42 42v85c0 23.5-19.1 42-42 42h-21v21c0 11.8-9.5 21-21 21h-21c-11.8 0-21-9.5-21-21v-21H214v21c0 11.8-9.5 21-21 21h-21c-11.8 0-21-9.5-21-21v-21h-21c-23.5 0-42-19.1-42-42v-85c0-23.5 19.1-42 42-42z"/>
+    <circle cx="192" cy="341" r="21"/>
+    <circle cx="320" cy="341" r="21"/>
+    <!-- Water drops -->
+    <circle cx="256" cy="160" r="11" fill="#87CEEB"/>
+    <circle cx="224" cy="128" r="8" fill="#87CEEB"/>
+    <circle cx="288" cy="138" r="8" fill="#87CEEB"/>
+    <circle cx="200" cy="180" r="6" fill="#87CEEB"/>
+    <circle cx="312" cy="170" r="6" fill="#87CEEB"/>
+  </g>
+  <text x="256" y="480" text-anchor="middle" fill="white" font-size="36" font-family="Arial, sans-serif" font-weight="bold">SISTEMA PEÑA BLANCA</text>
+</svg>

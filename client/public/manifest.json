@@ -1,0 +1,49 @@
+{
+  "name": "Sistema de Lavado Peña Blanca",
+  "short_name": "Peña Blanca",
+  "description": "Sistema completo de gestión para lavado de automóviles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0079F2",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver estadísticas del negocio",
+      "url": "/",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Nueva Cita",
+      "short_name": "Cita",
+      "description": "Agendar nueva cita",
+      "url": "/appointments",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Facturación",
+      "short_name": "Facturar",
+      "description": "Crear nueva factura",
+      "url": "/invoices",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

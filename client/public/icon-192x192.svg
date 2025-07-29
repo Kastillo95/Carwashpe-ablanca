@@ -1,0 +1,14 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#0079F2"/>
+  <g fill="white">
+    <!-- Car icon -->
+    <path d="M48 96h16l8-16h48l8 16h16c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16h-8v8c0 4.4-3.6 8-8 8h-8c-4.4 0-8-3.6-8-8v-8H80v8c0 4.4-3.6 8-8 8h-8c-4.4 0-8-3.6-8-8v-8h-8c-8.8 0-16-7.2-16-16v-32c0-8.8 7.2-16 16-16z"/>
+    <circle cx="72" cy="128" r="8"/>
+    <circle cx="120" cy="128" r="8"/>
+    <!-- Water drops -->
+    <circle cx="96" cy="60" r="4" fill="#87CEEB"/>
+    <circle cx="84" cy="48" r="3" fill="#87CEEB"/>
+    <circle cx="108" cy="52" r="3" fill="#87CEEB"/>
+  </g>
+  <text x="96" y="180" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif">PEÑA BLANCA</text>
+</svg>
