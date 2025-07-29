@@ -16,12 +16,24 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/stats"],
   });
 
+  const currentTime = new Date().toLocaleString('es-HN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Dashboard</h2>
-          <p className="text-gray-600">Bienvenido al sistema de gestión de Carwash Peña Blanca</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            🚗 Sistema de Lavado Peña Blanca
+          </h1>
+          <p className="text-gray-600 text-lg">{currentTime}</p>
+          <p className="text-gray-500 mt-1">Sistema funcionando correctamente - Todos los datos se guardan automáticamente</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
