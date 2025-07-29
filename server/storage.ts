@@ -323,75 +323,105 @@ export class DatabaseStorage implements IStorage {
 
   // Reports
   async getDashboardStats(): Promise<DashboardStats> {
-    const today = new Date().toISOString().split('T')[0];
-    
-    const [todayAppointmentsResult] = await db.select({ count: sql<number>`count(*)` })
-      .from(appointments)
-      .where(eq(appointments.date, today));
-    
-    const [dailyRevenueResult] = await db.select({ total: sql<number>`sum(${invoices.total}::numeric)` })
-      .from(invoices)
-      .where(and(eq(invoices.date, today), eq(invoices.status, "paid")));
-    
-    const [lowStockItemsResult] = await db.select({ count: sql<number>`count(*)` })
-      .from(inventory)
-      .where(sql`${inventory.quantity} <= ${inventory.minQuantity} AND ${inventory.active} = true`);
-    
-    const [servedCustomersResult] = await db.select({ count: sql<number>`count(distinct ${appointments.customerName})` })
-      .from(appointments)
-      .where(eq(appointments.date, today));
-    
-    return {
-      todayAppointments: todayAppointmentsResult?.count || 0,
-      dailyRevenue: dailyRevenueResult?.total || 0,
-      lowStockItems: lowStockItemsResult?.count || 0,
-      servedCustomers: servedCustomersResult?.count || 0
-    };
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get today's appointments count
+      const todayAppointments = await db.select().from(appointments)
+        .where(eq(appointments.date, today));
+      
+      // Get daily revenue for paid invoices
+      const dailyInvoices = await db.select().from(invoices)
+        .where(and(eq(invoices.date, today), eq(invoices.status, "paid")));
+      
+      const dailyRevenue = dailyInvoices.reduce((sum, invoice) => {
+        return sum + parseFloat(invoice.total);
+      }, 0);
+      
+      // Get low stock items count
+      const allInventory = await db.select().from(inventory)
+        .where(eq(inventory.active, true));
+      
+      const lowStockItems = allInventory.filter(item => 
+        item.quantity <= item.minQuantity
+      ).length;
+      
+      // Get served customers count (unique customers today)
+      const todayCustomers = new Set(
+        todayAppointments.map(apt => apt.customerName)
+      );
+      
+      return {
+        todayAppointments: todayAppointments.length,
+        dailyRevenue: dailyRevenue,
+        lowStockItems: lowStockItems,
+        servedCustomers: todayCustomers.size
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      return {
+        todayAppointments: 0,
+        dailyRevenue: 0,
+        lowStockItems: 0,
+        servedCustomers: 0
+      };
+    }
   }
 
   async getReportData(startDate: string, endDate: string): Promise<ReportData> {
-    const [revenueResult] = await db.select({ total: sql<number>`sum(${invoices.total}::numeric)` })
-      .from(invoices)
-      .where(and(
-        gte(invoices.date, startDate),
-        lte(invoices.date, endDate),
-        eq(invoices.status, "paid")
-      ));
-    
-    const [servicesResult] = await db.select({ count: sql<number>`count(*)` })
-      .from(appointments)
-      .where(and(
-        gte(appointments.date, startDate),
-        lte(appointments.date, endDate)
-      ));
-    
-    const [customersResult] = await db.select({ count: sql<number>`count(distinct ${appointments.customerName})` })
-      .from(appointments)
-      .where(and(
-        gte(appointments.date, startDate),
-        lte(appointments.date, endDate)
-      ));
-    
-    const [topServiceResult] = await db.select({ 
-      serviceName: appointments.serviceName, 
-      count: sql<number>`count(*)` 
-    })
-      .from(appointments)
-      .where(and(
-        gte(appointments.date, startDate),
-        lte(appointments.date, endDate)
-      ))
-      .groupBy(appointments.serviceName)
-      .orderBy(desc(sql`count(*)`))
-      .limit(1);
-    
-    return {
-      totalRevenue: revenueResult?.total || 0,
-      totalServices: servicesResult?.count || 0,
-      totalCustomers: customersResult?.count || 0,
-      topService: topServiceResult[0]?.serviceName || "N/A",
-      period: `${startDate} - ${endDate}`
-    };
+    try {
+      // Get paid invoices in date range
+      const invoicesInPeriod = await db.select().from(invoices)
+        .where(and(
+          gte(invoices.date, startDate),
+          lte(invoices.date, endDate),
+          eq(invoices.status, "paid")
+        ));
+      
+      const totalRevenue = invoicesInPeriod.reduce((sum, invoice) => {
+        return sum + parseFloat(invoice.total);
+      }, 0);
+      
+      // Get appointments in date range
+      const appointmentsInPeriod = await db.select().from(appointments)
+        .where(and(
+          gte(appointments.date, startDate),
+          lte(appointments.date, endDate)
+        ));
+      
+      const totalServices = appointmentsInPeriod.length;
+      
+      // Get unique customers
+      const uniqueCustomers = new Set(
+        appointmentsInPeriod.map(apt => apt.customerName)
+      );
+      
+      // Get top service
+      const serviceCount: Record<string, number> = {};
+      appointmentsInPeriod.forEach(apt => {
+        serviceCount[apt.serviceName] = (serviceCount[apt.serviceName] || 0) + 1;
+      });
+      
+      const topService = Object.entries(serviceCount)
+        .sort(([,a], [,b]) => b - a)[0]?.[0] || "N/A";
+      
+      return {
+        totalRevenue: totalRevenue,
+        totalServices: totalServices,
+        totalCustomers: uniqueCustomers.size,
+        topService: topService,
+        period: `${startDate} - ${endDate}`
+      };
+    } catch (error) {
+      console.error('Error getting report data:', error);
+      return {
+        totalRevenue: 0,
+        totalServices: 0,
+        totalCustomers: 0,
+        topService: "N/A",
+        period: `${startDate} - ${endDate}`
+      };
+    }
   }
 
   // Promotions
