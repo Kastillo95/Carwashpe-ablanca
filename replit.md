@@ -12,7 +12,7 @@ This is a comprehensive carwash management system with inventory, appointment bo
 
 ## User Preferences
 - Business focused on car wash operations
-- Wants standalone .exe application (NOT browser-based)
+- Wants standalone application that works like desktop software
 - Must be installable on PC like normal desktop software
 - Security is important (admin password protection)
 - Spanish language interface
@@ -20,6 +20,9 @@ This is a comprehensive carwash management system with inventory, appointment bo
 - COMPLETELY INDEPENDENT - no dependency on Replit or external servers
 - Must work offline and maintain all data locally
 - Automatic startup without manual server management
+- MULTI-PC INSTALLATION - wants to install on multiple computers
+- Portable and easily transferable between machines
+- Complete data backup and migration capabilities
 
 ## Project Architecture
 - **Frontend:** React SPA with Wouter routing in `client/src/`
