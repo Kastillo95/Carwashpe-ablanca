@@ -1,100 +1,102 @@
-import { pgTable, text, integer, decimal, boolean, timestamp, serial } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, real, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-export const services = pgTable("services", {
-  id: serial("id").primaryKey(),
+export const services = sqliteTable("services", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  price: real("price").notNull(),
   duration: integer("duration").notNull(), // in minutes
-  active: boolean("active").default(true),
+  active: integer("active", { mode: 'boolean' }).default(true),
+  createdAt: text("created_at").default("datetime('now')"),
 });
 
-export const customers = pgTable("customers", {
-  id: serial("id").primaryKey(),
+export const customers = sqliteTable("customers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   phone: text("phone"),
   email: text("email"),
   taxId: text("tax_id"), // RTN or ID number
   address: text("address"),
   notes: text("notes"),
-  totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0.00"),
-  lastVisit: timestamp("last_visit"),
-  createdAt: timestamp("created_at").defaultNow(),
-  active: boolean("active").default(true),
+  totalSpent: real("total_spent").default(0.00),
+  lastVisit: text("last_visit"),
+  createdAt: text("created_at").default("datetime('now')"),
+  active: integer("active", { mode: 'boolean' }).default(true),
 });
 
-export const appointments = pgTable("appointments", {
-  id: serial("id").primaryKey(),
+export const appointments = sqliteTable("appointments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   customerId: integer("customer_id").references(() => customers.id),
   serviceId: integer("service_id").references(() => services.id),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone"),
   serviceName: text("service_name").notNull(),
-  servicePrice: decimal("service_price", { precision: 10, scale: 2 }).notNull(),
+  servicePrice: real("service_price").notNull(),
   date: text("date").notNull(), // YYYY-MM-DD format
   time: text("time").notNull(), // HH:MM format
   status: text("status").default("scheduled"), // scheduled, completed, cancelled
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default("datetime('now')"),
 });
 
-export const inventory = pgTable("inventory", {
-  id: serial("id").primaryKey(),
+export const inventory = sqliteTable("inventory", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description"),
   barcode: text("barcode").unique(),
   quantity: integer("quantity").default(0), // Null para servicios
   minQuantity: integer("min_quantity"), // Null para servicios  
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  price: real("price").notNull(),
   supplier: text("supplier"),
   category: text("category"),
   imageUrl: text("image_url"), // URL de la imagen del producto
-  isService: boolean("is_service").default(false), // True para servicios como lavados
-  active: boolean("active").default(true),
+  isService: integer("is_service", { mode: 'boolean' }).default(false), // True para servicios como lavados
+  active: integer("active", { mode: 'boolean' }).default(true),
+  createdAt: text("created_at").default("datetime('now')"),
 });
 
-export const invoices = pgTable("invoices", {
-  id: serial("id").primaryKey(),
+export const invoices = sqliteTable("invoices", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   number: text("number").notNull().unique(),
   customerId: integer("customer_id").references(() => customers.id),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone"),
   customerTaxId: text("customer_tax_id"),
-  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
-  tax: decimal("tax", { precision: 10, scale: 2 }).notNull(),
-  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  subtotal: real("subtotal").notNull(),
+  tax: real("tax").notNull(),
+  total: real("total").notNull(),
   status: text("status").default("pending"), // pending, paid, cancelled
   date: text("date").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default("datetime('now')"),
 });
 
-export const invoiceItems = pgTable("invoice_items", {
-  id: serial("id").primaryKey(),
+export const invoiceItems = sqliteTable("invoice_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   invoiceId: integer("invoice_id").references(() => invoices.id),
   serviceName: text("service_name").notNull(),
   quantity: integer("quantity").notNull(),
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: real("unit_price").notNull(),
+  total: real("total").notNull(),
 });
 
-export const promotions = pgTable("promotions", {
-  id: serial("id").primaryKey(),
+export const promotions = sqliteTable("promotions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   message: text("message").notNull(),
   discount: text("discount"),
-  validFrom: timestamp("valid_from").notNull(),
-  validUntil: timestamp("valid_until").notNull(),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  validFrom: text("valid_from").notNull(),
+  validUntil: text("valid_until").notNull(),
+  active: integer("active", { mode: 'boolean' }).default(true),
+  createdAt: text("created_at").default("datetime('now')"),
 });
 
-export const promotionSends = pgTable("promotion_sends", {
-  id: serial("id").primaryKey(),
+export const promotionSends = sqliteTable("promotion_sends", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   promotionId: integer("promotion_id").references(() => promotions.id),
   customerId: integer("customer_id").references(() => customers.id),
-  sentAt: timestamp("sent_at").defaultNow(),
+  sentAt: text("sent_at").default("datetime('now')"),
   status: text("status").default("sent"), // sent, delivered, failed
 });
 
