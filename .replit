@@ -1,9 +1,10 @@
-modules = ["nodejs-20", "java-graalvm22.3", "web"]
+modules = ["nodejs-20", "java-graalvm22.3", "web", "python-3.11"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["cargo", "libiconv", "libxcrypt", "rustc"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -13,6 +14,10 @@ build = ["npm", "run", "build"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 [env]
 PORT = "5000"
