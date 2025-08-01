@@ -234,7 +234,7 @@ export default function Billing() {
                       <td className="p-2 font-medium">{invoice.number}</td>
                       <td className="p-2">{invoice.customerName}</td>
                       <td className="p-2">{new Date(invoice.date).toLocaleDateString()}</td>
-                      <td className="p-2 font-semibold">L. {parseFloat(invoice.total).toFixed(2)}</td>
+                      <td className="p-2 font-semibold">L. {parseFloat(invoice.total.toString()).toFixed(2)}</td>
                       <td className="p-2">
                         <Badge 
                           variant={invoice.status === "paid" ? "default" : "secondary"}
@@ -246,7 +246,7 @@ export default function Billing() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleViewInvoice(invoice.id)}
+                          onClick={() => handleViewInvoice(invoice)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -355,8 +355,8 @@ export default function Billing() {
                       <td className="py-3 font-medium">{(invoice as any).number || (invoice as any).invoiceNumber}</td>
                       <td className="py-3">{invoice.customerName}</td>
                       <td className="py-3">{formatDate(invoice.date)}</td>
-                      <td className="py-3">{formatCurrency(parseFloat(invoice.total))}</td>
-                      <td className="py-3">{getStatusBadge(invoice.status)}</td>
+                      <td className="py-3">{formatCurrency(parseFloat(invoice.total.toString()))}</td>
+                      <td className="py-3">{getStatusBadge(invoice.status || "pending")}</td>
                       <td className="py-3">
                         <div className="flex space-x-2">
                           <Button

@@ -61,6 +61,20 @@ export function EnhancedInvoiceForm() {
   const watchedCustomer = form.watch("customerName");
   const totals = calculateInvoiceTotals(watchedItems);
 
+  // Create options for services and products
+  const allOptions = [
+    // Predefined services
+    ...Object.entries(SERVICES).map(([key, service]) => ({
+      value: key,
+      label: `${service.name} - L. ${service.price.toFixed(2)}`
+    })),
+    // Inventory items
+    ...(inventory || []).map(item => ({
+      value: item.id.toString(),
+      label: `${item.name} - L. ${parseFloat(item.price.toString()).toFixed(2)}`
+    }))
+  ];
+
   // Update preview whenever form data changes
   const updatePreview = () => {
     const formData = form.getValues();
@@ -71,12 +85,12 @@ export function EnhancedInvoiceForm() {
       customerName: formData.customerName || "Cliente",
       customerPhone: formData.customerPhone || "",
       customerTaxId: formData.customerTaxId || "",
-      subtotal: totals.subtotal.toString(),
-      tax: "0.00",
-      total: totals.total.toString(),
+      subtotal: totals.subtotal,
+      tax: 0,
+      total: totals.total,
       status: "pending",
       date: formData.date,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
 
     const mockItems: InvoiceItem[] = formData.items.map((item, index) => ({
@@ -84,8 +98,8 @@ export function EnhancedInvoiceForm() {
       invoiceId: 0,
       serviceName: item.serviceName || "Servicio",
       quantity: item.quantity,
-      unitPrice: item.unitPrice.toString(),
-      total: (item.quantity * item.unitPrice).toString(),
+      unitPrice: item.unitPrice,
+      total: (item.quantity * item.unitPrice),
     }));
 
     setLastCreatedInvoice({ invoice: mockInvoice, items: mockItems });
@@ -111,9 +125,10 @@ export function EnhancedInvoiceForm() {
   const handleServiceChange = (index: number, value: string) => {
     const currentItems = form.getValues("items");
     
-    // First check predefined services
-    const service = SERVICES[value as keyof typeof SERVICES];
-    if (service) {
+    // First check predefined services  
+    const serviceKey = Object.keys(SERVICES).find(key => key === value);
+    if (serviceKey) {
+      const service = SERVICES[serviceKey as keyof typeof SERVICES];
       currentItems[index].serviceName = service.name;
       currentItems[index].unitPrice = service.price;
       form.setValue("items", currentItems);
@@ -372,10 +387,13 @@ export function EnhancedInvoiceForm() {
                   <div className="space-y-2 md:col-span-2">
                     <Label>Servicio/Producto</Label>
                     <Select 
-                      value={allOptions.find(option => 
-                        (SERVICES[option.value as keyof typeof SERVICES]?.name === item.serviceName) ||
-                        (inventory?.find(inv => inv.id.toString() === option.value)?.name === item.serviceName)
-                      )?.value || ""}
+                      value={item.serviceName ? 
+                        allOptions.find(option => {
+                          const serviceKey = Object.keys(SERVICES).find(key => SERVICES[key as keyof typeof SERVICES].name === item.serviceName);
+                          const inventoryItem = inventory?.find(inv => inv.name === item.serviceName);
+                          return option.value === serviceKey || option.value === inventoryItem?.id.toString();
+                        })?.value || "" : ""
+                      }
                       onValueChange={(value) => handleServiceChange(index, value)}
                       disabled={isLoading}
                     >
