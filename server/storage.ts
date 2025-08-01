@@ -217,17 +217,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInventoryItem(item: InsertInventory): Promise<Inventory> {
+    const itemData = {
+      ...item,
+      price: parseFloat(item.price.toString())
+    };
     const [newItem] = await db
       .insert(inventory)
-      .values(item)
+      .values(itemData)
       .returning();
     return newItem;
   }
 
   async updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory> {
+    const updateData: any = { ...item };
+    if (updateData.price) {
+      updateData.price = parseFloat(updateData.price.toString());
+    }
     const [updated] = await db
       .update(inventory)
-      .set(item)
+      .set(updateData)
       .where(eq(inventory.id, id))
       .returning();
     return updated;

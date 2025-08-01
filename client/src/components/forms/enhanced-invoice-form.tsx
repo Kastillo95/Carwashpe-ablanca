@@ -287,20 +287,7 @@ export function EnhancedInvoiceForm() {
     }
   };
 
-  const allOptions = [
-    // Predefined services
-    ...Object.entries(SERVICES).map(([key, service]) => ({
-      value: key,
-      label: `${service.name} - ${formatCurrency(service.price)}`,
-      price: service.price,
-    })),
-    // Inventory items (available to all users)
-    ...(inventory?.map(item => ({
-      value: item.id.toString(),
-      label: `${item.name} - ${formatCurrency(parseFloat(item.price.toString()))}`,
-      price: parseFloat(item.price.toString()),
-    })) || []),
-  ];
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
