@@ -144,20 +144,206 @@ export function DashboardQuickBilling() {
         printWindow.document.write(`
           <html>
             <head>
-              <title>Factura ${lastInvoice?.invoice_number || ''}</title>
+              <title>Factura Térmica ${lastInvoice?.number || ''}</title>
               <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .invoice-header { text-align: center; margin-bottom: 30px; }
-                .invoice-details { margin-bottom: 20px; }
-                .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                .invoice-table th { background-color: #f2f2f2; }
-                .invoice-total { text-align: right; font-weight: bold; }
-                @media print { body { margin: 0; } }
+                /* Estilo para impresora térmica */
+                @page {
+                  size: 80mm auto;
+                  margin: 0;
+                }
+                
+                body { 
+                  font-family: 'Courier New', monospace; 
+                  font-size: 11px;
+                  line-height: 1.2;
+                  margin: 0;
+                  padding: 5mm;
+                  width: 70mm;
+                  color: #000;
+                  background: white;
+                }
+                
+                .thermal-header {
+                  text-align: center;
+                  border-bottom: 1px solid #000;
+                  padding-bottom: 3mm;
+                  margin-bottom: 3mm;
+                }
+                
+                .business-name {
+                  font-size: 14px;
+                  font-weight: bold;
+                  margin-bottom: 1mm;
+                }
+                
+                .business-info {
+                  font-size: 9px;
+                  line-height: 1.1;
+                }
+                
+                .invoice-number {
+                  font-size: 12px;
+                  font-weight: bold;
+                  margin: 2mm 0;
+                  text-align: center;
+                  border: 1px solid #000;
+                  padding: 1mm;
+                }
+                
+                .customer-info {
+                  margin: 3mm 0;
+                  font-size: 10px;
+                }
+                
+                .items-table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  margin: 3mm 0;
+                  font-size: 9px;
+                }
+                
+                .items-table th {
+                  border-bottom: 1px solid #000;
+                  padding: 1mm 0;
+                  text-align: left;
+                  font-weight: bold;
+                }
+                
+                .items-table td {
+                  padding: 1mm 0;
+                  border-bottom: 1px dotted #666;
+                }
+                
+                .item-name {
+                  font-weight: bold;
+                }
+                
+                .item-details {
+                  font-size: 8px;
+                  color: #666;
+                }
+                
+                .totals {
+                  margin-top: 3mm;
+                  border-top: 1px solid #000;
+                  padding-top: 2mm;
+                  font-size: 10px;
+                }
+                
+                .total-line {
+                  display: flex;
+                  justify-content: space-between;
+                  margin: 1mm 0;
+                }
+                
+                .final-total {
+                  font-size: 12px;
+                  font-weight: bold;
+                  border-top: 1px solid #000;
+                  border-bottom: 1px solid #000;
+                  padding: 1mm 0;
+                  margin: 2mm 0;
+                }
+                
+                .footer {
+                  text-align: center;
+                  font-size: 8px;
+                  margin-top: 5mm;
+                  border-top: 1px dotted #666;
+                  padding-top: 2mm;
+                }
+                
+                .thermal-divider {
+                  text-align: center;
+                  margin: 2mm 0;
+                  font-size: 8px;
+                }
+                
+                @media print {
+                  body { margin: 0; padding: 2mm; }
+                  .no-print { display: none; }
+                }
               </style>
             </head>
             <body>
-              ${printContent.innerHTML}
+              <div class="thermal-header">
+                <div class="business-name">${BUSINESS_INFO.name}</div>
+                <div class="business-info">
+                  ${BUSINESS_INFO.address}<br>
+                  ${BUSINESS_INFO.addressDetail}<br>
+                  Tel: ${BUSINESS_INFO.phone}<br>
+                  RTN: ${BUSINESS_INFO.rtn}
+                </div>
+              </div>
+              
+              <div class="invoice-number">
+                FACTURA: ${lastInvoice?.number || 'N/A'}
+              </div>
+              
+              <div class="thermal-divider">================================</div>
+              
+              <div class="customer-info">
+                <strong>CLIENTE:</strong> ${lastInvoice?.customer?.name || 'N/A'}<br>
+                ${lastInvoice?.customer?.phone ? `Tel: ${lastInvoice.customer.phone}<br>` : ''}
+                <strong>FECHA:</strong> ${lastInvoice?.date ? new Date(lastInvoice.date).toLocaleDateString('es-HN') : new Date().toLocaleDateString('es-HN')}<br>
+                <strong>PAGO:</strong> ${lastInvoice?.payment_method || 'Efectivo'}
+              </div>
+              
+              <div class="thermal-divider">================================</div>
+              
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>DESCRIPCION</th>
+                    <th style="text-align: center;">CANT</th>
+                    <th style="text-align: right;">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${lastInvoice?.items?.map((item, index) => `
+                    <tr>
+                      <td>
+                        <div class="item-name">${item.serviceName}</div>
+                        <div class="item-details">${item.type === 'service' ? 'Servicio' : 'Producto'} - L.${(item.unitPrice || 0).toFixed(2)} c/u</div>
+                      </td>
+                      <td style="text-align: center;">${item.quantity}</td>
+                      <td style="text-align: right;">L.${(item.total || (item.quantity * item.unitPrice) || 0).toFixed(2)}</td>
+                    </tr>
+                  `).join('') || ''}
+                </tbody>
+              </table>
+              
+              <div class="thermal-divider">================================</div>
+              
+              <div class="totals">
+                <div class="total-line">
+                  <span>Subtotal:</span>
+                  <span>L.${(lastInvoice?.subtotal || 0).toFixed(2)}</span>
+                </div>
+                <div class="total-line">
+                  <span>ISV (15%):</span>
+                  <span>L.${(lastInvoice?.tax || 0).toFixed(2)}</span>
+                </div>
+                <div class="total-line final-total">
+                  <span>TOTAL:</span>
+                  <span>L.${(lastInvoice?.total || 0).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              ${lastInvoice?.notes ? `
+                <div class="thermal-divider">--------------------------------</div>
+                <div style="font-size: 8px; margin: 2mm 0;">
+                  <strong>NOTAS:</strong> ${lastInvoice.notes}
+                </div>
+              ` : ''}
+              
+              <div class="footer">
+                <div class="thermal-divider">================================</div>
+                ¡GRACIAS POR SU PREFERENCIA!<br>
+                ${BUSINESS_INFO.hours.weekdays}<br>
+                ${BUSINESS_INFO.hours.sunday}<br>
+                <div class="thermal-divider">********************************</div>
+              </div>
             </body>
           </html>
         `);
