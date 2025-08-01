@@ -220,7 +220,30 @@ export function DashboardQuickBilling() {
       console.log("Invoice creation result:", result);
       
       if (result && typeof result === 'object' && 'invoice' in result) {
-        setLastInvoice(result);
+        // Preparar la estructura completa para el componente SAP
+        const fullInvoiceData = {
+          ...result.invoice,
+          number: result.invoice.number,
+          date: result.invoice.date,
+          subtotal: result.invoice.subtotal,
+          tax: result.invoice.tax,
+          total: result.invoice.total,
+          status: result.invoice.status,
+          payment_method: data.paymentMethod || "efectivo",
+          notes: data.notes || "",
+          customer: {
+            name: data.customerName,
+            phone: data.customerPhone || "",
+            email: data.customerEmail || "",
+            address: data.customerTaxId || ""
+          },
+          items: result.items.map((item: any, index: number) => ({
+            ...item,
+            type: cart.find(cartItem => cartItem.name === item.serviceName)?.type || 'service'
+          }))
+        };
+        
+        setLastInvoice(fullInvoiceData);
         setShowPreview(true);
         
         // Limpiar carrito
@@ -229,7 +252,7 @@ export function DashboardQuickBilling() {
         
         toast({
           title: "Factura creada exitosamente",
-          description: `Factura generada para ${data.customerName}`,
+          description: `Factura ${result.invoice.number} generada para ${data.customerName}`,
         });
         
         // Invalidar queries para actualizar datos
@@ -474,7 +497,7 @@ export function DashboardQuickBilling() {
                     <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-3 rounded-lg shadow-lg border border-blue-700">
                       <p className="text-2xl font-bold tracking-wide">FACTURA</p>
                       <p className="text-lg font-mono bg-blue-500 bg-opacity-30 px-2 py-1 rounded mt-1">
-                        {lastInvoice.number}
+                        {lastInvoice?.number || 'N/A'}
                       </p>
                       <p className="text-xs mt-1 opacity-90">
                         {new Date().toLocaleDateString('es-HN')}
@@ -538,21 +561,21 @@ export function DashboardQuickBilling() {
                     <div className="space-y-2 text-sm">
                       <div className="grid grid-cols-3 gap-2">
                         <span className="font-semibold text-gray-600">Número:</span>
-                        <span className="col-span-2 font-mono">{lastInvoice.number}</span>
+                        <span className="col-span-2 font-mono">{lastInvoice?.number || 'N/A'}</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <span className="font-semibold text-gray-600">Fecha:</span>
-                        <span className="col-span-2">{new Date(lastInvoice.date).toLocaleDateString('es-HN')}</span>
+                        <span className="col-span-2">{lastInvoice?.date ? new Date(lastInvoice.date).toLocaleDateString('es-HN') : 'N/A'}</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <span className="font-semibold text-gray-600">M. Pago:</span>
-                        <span className="col-span-2 capitalize">{lastInvoice.payment_method}</span>
+                        <span className="col-span-2 capitalize">{lastInvoice?.payment_method || 'efectivo'}</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <span className="font-semibold text-gray-600">Estado:</span>
                         <span className="col-span-2">
                           <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                            {lastInvoice.status}
+                            {lastInvoice?.status || 'pendiente'}
                           </span>
                         </span>
                       </div>
@@ -592,9 +615,9 @@ export function DashboardQuickBilling() {
                           </div>
                         </td>
                         <td className="border border-blue-200 p-3 text-center font-semibold">{item.quantity}</td>
-                        <td className="border border-blue-200 p-3 text-right font-mono">{formatCurrency(item.unitPrice)}</td>
+                        <td className="border border-blue-200 p-3 text-right font-mono">{formatCurrency(item.unitPrice || 0)}</td>
                         <td className="border border-blue-200 p-3 text-right font-mono font-semibold text-green-700">
-                          {formatCurrency(item.total)}
+                          {formatCurrency(item.total || (item.quantity * item.unitPrice))}
                         </td>
                       </tr>
                     ))}
@@ -613,20 +636,20 @@ export function DashboardQuickBilling() {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700">Subtotal (Base imponible):</span>
                         <span className="font-mono bg-white px-3 py-1 rounded border">
-                          {formatCurrency(lastInvoice.subtotal)}
+                          {formatCurrency(lastInvoice?.subtotal || 0)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700">ISV (15% incluido):</span>
                         <span className="font-mono bg-white px-3 py-1 rounded border">
-                          {formatCurrency(lastInvoice.tax)}
+                          {formatCurrency(lastInvoice?.tax || 0)}
                         </span>
                       </div>
                       <div className="border-t border-blue-300 pt-3">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-bold text-blue-800">TOTAL A PAGAR:</span>
                           <span className="text-xl font-bold font-mono bg-green-100 text-green-800 px-4 py-2 rounded border-2 border-green-300">
-                            {formatCurrency(lastInvoice.total)}
+                            {formatCurrency(lastInvoice?.total || 0)}
                           </span>
                         </div>
                       </div>
@@ -636,10 +659,10 @@ export function DashboardQuickBilling() {
               </div>
 
               {/* Notas */}
-              {lastInvoice.notes && (
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-800 mb-2">Notas</h3>
-                  <p className="text-gray-600">{lastInvoice.notes}</p>
+              {lastInvoice?.notes && (
+                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
+                  <h3 className="font-bold text-yellow-800 mb-2 border-b border-yellow-200 pb-2">OBSERVACIONES</h3>
+                  <p className="text-gray-700 text-sm">{lastInvoice.notes}</p>
                 </div>
               )}
 
