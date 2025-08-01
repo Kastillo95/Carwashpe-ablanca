@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type Inventory, type Invoice, type InvoiceItem } from "@shared/schema";
 import { getTodayDate, formatCurrency, calculateInvoiceTotals } from "@/lib/utils";
 import { SERVICES, BUSINESS_INFO, TAX_RATE } from "@/lib/constants";
+import LogoComponent from "./logo-component";
 
 const invoiceSchema = z.object({
   customerName: z.string().min(1, "Nombre del cliente requerido"),
@@ -267,6 +268,11 @@ export function DashboardQuickBilling() {
             </head>
             <body>
               <div class="thermal-header">
+                <div style="display: flex; justify-content: center; margin-bottom: 2mm;">
+                  <div style="width: 25mm; height: 25mm; border: 1px solid #000; border-radius: 3mm; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+                    <div style="font-size: 12px; font-weight: bold; text-align: center;">CW<br><span style="font-size: 8px;">LOGO</span></div>
+                  </div>
+                </div>
                 <div class="business-name">${BUSINESS_INFO.name}</div>
                 <div class="business-info">
                   ${BUSINESS_INFO.address}<br>
@@ -663,16 +669,7 @@ export function DashboardQuickBilling() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     {/* Logo profesional de Carwash Peña Blanca */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg border-2 border-white">
-                      <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        {/* Carro */}
-                        <path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.22.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 15c-.83 0-1.5-.67-1.5-1.5S5.67 12 6.5 12s1.5.67 1.5 1.5S7.33 15 6.5 15zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 10l1.5-4.5h11L19 10H5z"/>
-                        {/* Gotas de agua */}
-                        <circle cx="8" cy="3" r="1" className="animate-pulse"/>
-                        <circle cx="12" cy="2" r="1.2" className="animate-pulse"/>
-                        <circle cx="16" cy="3" r="1" className="animate-pulse"/>
-                      </svg>
-                    </div>
+                    <LogoComponent size="large" />
                     <div>
                       <h1 className="text-3xl font-bold text-blue-800">{BUSINESS_INFO.name}</h1>
                       <p className="text-blue-600 text-lg font-medium">Sistema de Gestión Integral</p>
