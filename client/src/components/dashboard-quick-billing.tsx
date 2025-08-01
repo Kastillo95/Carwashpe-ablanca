@@ -307,7 +307,7 @@ export function DashboardQuickBilling() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${lastInvoice?.items?.map((item, index) => `
+                  ${lastInvoice?.items?.map((item: any, index: number) => `
                     <tr>
                       <td>
                         <div class="item-name">${item.serviceName}</div>
