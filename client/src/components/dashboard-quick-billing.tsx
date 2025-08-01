@@ -19,6 +19,7 @@ import { type Inventory, type Invoice, type InvoiceItem } from "@shared/schema";
 import { getTodayDate, formatCurrency, calculateInvoiceTotals } from "@/lib/utils";
 import { SERVICES, BUSINESS_INFO, TAX_RATE } from "@/lib/constants";
 import LogoComponent from "./logo-component";
+import logoImage from "@assets/IMG_20250706_211100_1752220069225.jpg";
 
 const invoiceSchema = z.object({
   customerName: z.string().min(1, "Nombre del cliente requerido"),
@@ -269,8 +270,8 @@ export function DashboardQuickBilling() {
             <body>
               <div class="thermal-header">
                 <div style="display: flex; justify-content: center; margin-bottom: 2mm;">
-                  <div style="width: 20mm; height: 20mm; border: 1px solid #000; border-radius: 3mm; display: flex; align-items: center; justify-content: center; background: #2563eb;">
-                    <div style="color: white; font-size: 10px; font-weight: bold; text-align: center;">CW</div>
+                  <div style="width: 20mm; height: 20mm; border: 1px solid #000; border-radius: 3mm; overflow: hidden; background: white;">
+                    <img src="${logoImage}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
                   </div>
                 </div>
                 <div class="business-name">${BUSINESS_INFO.name}</div>
