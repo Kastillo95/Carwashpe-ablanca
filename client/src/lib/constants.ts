@@ -14,13 +14,13 @@ export const BUSINESS_INFO = {
   }
 };
 
-export const SERVICES = {
-  "lavado-basico": { name: "Lavado Básico", price: 80 },
-  "lavado-completo": { name: "Lavado Completo", price: 150 },
-  "lavado-premium": { name: "Lavado Premium", price: 250 },
-  "encerado": { name: "Encerado", price: 200 },
-  "detallado": { name: "Detallado Completo", price: 400 }
-};
+export const SERVICES = [
+  { id: 1, name: "Lavado Básico", price: 80 },
+  { id: 2, name: "Lavado Completo", price: 150 },
+  { id: 3, name: "Lavado Premium", price: 250 },
+  { id: 4, name: "Encerado", price: 200 },
+  { id: 5, name: "Detallado Completo", price: 400 }
+];
 
 export const TIME_SLOTS = [
   "08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"

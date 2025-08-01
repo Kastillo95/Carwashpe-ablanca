@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { DashboardStats } from "@shared/schema";
+import { DashboardQuickBilling } from "@/components/dashboard-quick-billing";
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
@@ -93,59 +94,69 @@ export default function Dashboard() {
         <p className="text-gray-600">Bienvenido al sistema de gestión de Carwash Peña Blanca</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                  </div>
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Actividad Reciente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-brand-carbon rounded-full flex items-center justify-center">
-                <CalendarCheck className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Sistema iniciado</p>
-                <p className="text-xs text-gray-500">El sistema está funcionando correctamente</p>
-              </div>
-              <span className="text-xs text-gray-400">Ahora</span>
-            </div>
-            
-            <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                <Receipt className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Datos cargados</p>
-                <p className="text-xs text-gray-500">Inventario y servicios disponibles</p>
-              </div>
-              <span className="text-xs text-gray-400">Hace 1 min</span>
-            </div>
+      {/* Layout principal con facturación rápida */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Estadísticas */}
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {statsCards.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">{stat.title}</p>
+                        <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                      </div>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Actividad Reciente */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Actividad Reciente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 bg-brand-carbon rounded-full flex items-center justify-center">
+                    <CalendarCheck className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Sistema iniciado</p>
+                    <p className="text-xs text-gray-500">El sistema está funcionando correctamente</p>
+                  </div>
+                  <span className="text-xs text-gray-400">Ahora</span>
+                </div>
+                
+                <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <Receipt className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Datos cargados</p>
+                    <p className="text-xs text-gray-500">Inventario y servicios disponibles</p>
+                  </div>
+                  <span className="text-xs text-gray-400">Hace 1 min</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Panel de Facturación Rápida */}
+        <div className="lg:col-span-1">
+          <DashboardQuickBilling />
+        </div>
+      </div>
     </div>
   );
 }
