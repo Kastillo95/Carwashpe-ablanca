@@ -23,7 +23,7 @@ const invoiceSchema = z.object({
   customerName: z.string().min(1, "Nombre del cliente requerido"),
   customerPhone: z.string().optional(),
   customerEmail: z.string().optional(),
-  customerAddress: z.string().optional(),
+  customerTaxId: z.string().optional(),
   selectedService: z.string().optional(),
   selectedProduct: z.string().optional(),
   quantity: z.number().min(1, "Cantidad mínima 1").default(1),
@@ -63,7 +63,7 @@ export function DashboardQuickBilling() {
       customerName: "",
       customerPhone: "",
       customerEmail: "",
-      customerAddress: "",
+      customerTaxId: "",
       quantity: 1,
       paymentMethod: "efectivo",
       notes: "",
@@ -191,13 +191,33 @@ export function DashboardQuickBilling() {
         customer: {
           name: data.customerName,
           phone: data.customerPhone || "",
-          taxId: "",
+          taxId: data.customerTaxId || "",
         },
         items: invoiceItems,
         date: getTodayDate(),
       };
 
-      const result = await apiRequest("/api/invoices", "POST", invoiceData);
+      console.log("Sending invoice data:", invoiceData);
+
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoiceData),
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("Invoice creation result:", result);
       
       if (result && typeof result === 'object' && 'invoice' in result) {
         setLastInvoice(result);
@@ -220,9 +240,10 @@ export function DashboardQuickBilling() {
       }
 
     } catch (error) {
+      console.error("Error creating invoice:", error);
       toast({
         title: "Error",
-        description: "No se pudo crear la factura",
+        description: error instanceof Error ? error.message : "No se pudo crear la factura",
         variant: "destructive",
       });
     } finally {
@@ -260,8 +281,8 @@ export function DashboardQuickBilling() {
                 className="h-9"
               />
               <Input
-                placeholder="Dirección"
-                {...form.register("customerAddress")}
+                placeholder="RTN/Identidad (opcional)"
+                {...form.register("customerTaxId")}
                 className="h-9"
               />
             </div>
