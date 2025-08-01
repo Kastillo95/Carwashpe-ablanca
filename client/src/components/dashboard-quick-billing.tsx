@@ -193,10 +193,10 @@ export function DashboardQuickBilling() {
 
       const customer = await customerResponse.json();
 
-      // Crear factura
-      const subtotal = calculateTotal();
-      const tax = subtotal * TAX_RATE;
-      const total = subtotal + tax;
+      // Crear factura - El ISV ya está incluido en los precios
+      const total = calculateTotal();
+      const subtotal = total / (1 + TAX_RATE);
+      const tax = total - subtotal;
       
       const invoiceItems = cart.map(item => ({
         type: item.type,
@@ -208,9 +208,9 @@ export function DashboardQuickBilling() {
 
       const invoiceResponse = await apiRequest("/api/invoices", "POST", {
         customer_id: customer.id,
-        subtotal: subtotal,
-        tax: tax,
-        total: total,
+        subtotal: Math.round(subtotal * 100) / 100,
+        tax: Math.round(tax * 100) / 100,
+        total: Math.round(total * 100) / 100,
         status: "pendiente",
         payment_method: data.paymentMethod,
         notes: data.notes,
@@ -395,16 +395,16 @@ export function DashboardQuickBilling() {
                 {/* Totales */}
                 <div className="border-t pt-3 mt-3 space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(calculateTotal())}</span>
+                    <span>Subtotal (sin ISV):</span>
+                    <span>{formatCurrency(calculateTotal() / (1 + TAX_RATE))}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>ISV (15%):</span>
-                    <span>{formatCurrency(calculateTotal() * TAX_RATE)}</span>
+                    <span>ISV (15% incluido):</span>
+                    <span>{formatCurrency(calculateTotal() - (calculateTotal() / (1 + TAX_RATE)))}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span className="text-green-600">{formatCurrency(calculateTotal() * (1 + TAX_RATE))}</span>
+                    <span className="text-green-600">{formatCurrency(calculateTotal())}</span>
                   </div>
                 </div>
               </div>
@@ -563,7 +563,10 @@ export function DashboardQuickBilling() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setShowPreview(false)}
+              onClick={() => {
+                setShowPreview(false);
+                setLastInvoice(null);
+              }}
               className="flex-1"
             >
               Cerrar
