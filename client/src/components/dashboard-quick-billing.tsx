@@ -269,8 +269,8 @@ export function DashboardQuickBilling() {
             <body>
               <div class="thermal-header">
                 <div style="display: flex; justify-content: center; margin-bottom: 2mm;">
-                  <div style="width: 25mm; height: 25mm; border: 1px solid #000; border-radius: 3mm; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
-                    <div style="font-size: 12px; font-weight: bold; text-align: center;">CW<br><span style="font-size: 8px;">LOGO</span></div>
+                  <div style="width: 20mm; height: 20mm; border: 1px solid #000; border-radius: 3mm; display: flex; align-items: center; justify-content: center; background: #2563eb;">
+                    <div style="color: white; font-size: 10px; font-weight: bold; text-align: center;">CW</div>
                   </div>
                 </div>
                 <div class="business-name">${BUSINESS_INFO.name}</div>
