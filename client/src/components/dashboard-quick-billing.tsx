@@ -71,7 +71,7 @@ export function DashboardQuickBilling() {
   });
 
   const addServiceToCart = (serviceId: string) => {
-    const service = SERVICES.find((s) => s.id.toString() === serviceId);
+    const service = SERVICES.find(s => s.id.toString() === serviceId);
     if (service) {
       addToCart({
         id: service.id,
@@ -98,7 +98,7 @@ export function DashboardQuickBilling() {
       addToCart({
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: parseFloat(product.price.toString()),
         quantity,
         type: 'product'
       });
@@ -179,75 +179,45 @@ export function DashboardQuickBilling() {
 
     setIsLoading(true);
     try {
-      // Crear cliente si no existe
-      const customerResponse = await apiRequest("/api/crm/customers", "POST", {
-        name: data.customerName,
-        phone: data.customerPhone || "",
-        email: data.customerEmail || "",
-        address: data.customerAddress || "",
-      });
-
-      if (!customerResponse.ok) {
-        throw new Error("Error al crear cliente");
-      }
-
-      const customer = await customerResponse.json();
-
-      // Crear factura - El ISV ya está incluido en los precios
-      const total = calculateTotal();
-      const subtotal = total / (1 + TAX_RATE);
-      const tax = total - subtotal;
-      
+      // Preparar los items de la factura
       const invoiceItems = cart.map(item => ({
-        type: item.type,
-        item_id: item.id,
-        name: item.name,
+        serviceName: item.name,
         quantity: item.quantity,
-        unit_price: item.price,
+        unitPrice: item.price,
       }));
 
-      const invoiceResponse = await apiRequest("/api/invoices", "POST", {
-        customer_id: customer.id,
-        subtotal: Math.round(subtotal * 100) / 100,
-        tax: Math.round(tax * 100) / 100,
-        total: Math.round(total * 100) / 100,
-        status: "pendiente",
-        payment_method: data.paymentMethod,
-        notes: data.notes,
+      // Crear factura usando el formato correcto
+      const invoiceData = {
+        customer: {
+          name: data.customerName,
+          phone: data.customerPhone || "",
+          taxId: "",
+        },
         items: invoiceItems,
-      });
+        date: getTodayDate(),
+      };
 
-      if (!invoiceResponse.ok) {
+      const result = await apiRequest("/api/invoices", "POST", invoiceData);
+      
+      if (result && typeof result === 'object' && 'invoice' in result) {
+        setLastInvoice(result);
+        setShowPreview(true);
+        
+        // Limpiar carrito
+        setCart([]);
+        form.reset();
+        
+        toast({
+          title: "Factura creada exitosamente",
+          description: `Factura generada para ${data.customerName}`,
+        });
+        
+        // Invalidar queries para actualizar datos
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      } else {
         throw new Error("Error al crear factura");
       }
-
-      const invoice = await invoiceResponse.json();
-      
-      // Preparar datos completos para vista previa
-      const fullInvoice = {
-        ...invoice,
-        customer: customer,
-        items: invoiceItems.map(item => ({
-          ...item,
-          total_price: item.quantity * item.unit_price
-        }))
-      };
-      
-      setLastInvoice(fullInvoice);
-      setShowPreview(true);
-
-      toast({
-        title: "¡Factura creada!",
-        description: `Factura ${invoice.invoice_number} por ${formatCurrency(total)}`,
-      });
-
-      // Limpiar carrito y formulario
-      setCart([]);
-      form.reset();
-      
-      // Invalidar queries para actualizar datos
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
 
     } catch (error) {
       toast({
@@ -553,23 +523,20 @@ export function DashboardQuickBilling() {
           )}
 
           {/* Botones de acción */}
-          <div className="flex gap-2 mt-6">
+          <div className="flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(false)}
+              className="flex-1"
+            >
+              Cerrar
+            </Button>
             <Button
               onClick={handlePrint}
               className="flex-1"
             >
               <Printer className="w-4 h-4 mr-2" />
               Imprimir
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowPreview(false);
-                setLastInvoice(null);
-              }}
-              className="flex-1"
-            >
-              Cerrar
             </Button>
           </div>
         </DialogContent>
