@@ -435,6 +435,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/crm/customers", async (req, res) => {
+    try {
+      const customerData = req.body;
+      const customer = await storage.createCustomer(customerData);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      res.status(400).json({ message: error instanceof Error ? error.message : "Error al crear cliente" });
+    }
+  });
+
   app.get("/api/crm/customers/top", async (req, res) => {
     try {
       const { limit } = req.query;

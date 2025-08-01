@@ -266,34 +266,48 @@ export class DatabaseStorage implements IStorage {
     return { invoice, items };
   }
 
-  async createInvoice(data: CreateInvoiceData): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
+  async createInvoice(data: any): Promise<{ invoice: Invoice; items: InvoiceItem[] }> {
     const invoiceNumber = await this.getNextInvoiceNumber();
     
-    // Calculate totals
-    const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const tax = subtotal * 0.15; // 15% tax
-    const total = subtotal + tax;
-    
+    // Crear factura con los datos recibidos directamente
     const [invoice] = await db.insert(invoices).values({
       number: invoiceNumber,
-      customerName: data.customer.name,
-      customerPhone: data.customer.phone || null,
-      customerTaxId: data.customer.taxId || null,
-      subtotal: subtotal.toFixed(2),
-      tax: tax.toFixed(2),
-      total: total.toFixed(2),
-      date: data.date,
-      status: "pending"
+      customerId: data.customer_id || null,
+      customerName: "", // Se llenará después
+      customerPhone: null,
+      customerTaxId: null,
+      subtotal: data.subtotal.toString(),
+      tax: data.tax.toString(),
+      total: data.total.toString(),
+      date: new Date().toISOString().split('T')[0],
+      status: data.status || "pendiente",
+      paymentMethod: data.payment_method || "efectivo",
+      notes: data.notes || null
     }).returning();
     
+    // Obtener información del cliente
+    if (data.customer_id) {
+      const customer = await this.getCustomer(data.customer_id);
+      if (customer) {
+        await db.update(invoices)
+          .set({ 
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            customerTaxId: customer.taxId
+          })
+          .where(eq(invoices.id, invoice.id));
+      }
+    }
+    
+    // Crear items de la factura
     const items = await Promise.all(
-      data.items.map(item => 
+      data.items.map((item: any) => 
         db.insert(invoiceItems).values({
           invoiceId: invoice.id,
-          serviceName: item.serviceName,
+          serviceName: item.name,
           quantity: item.quantity,
-          unitPrice: item.unitPrice.toFixed(2),
-          total: (item.quantity * item.unitPrice).toFixed(2)
+          unitPrice: item.unit_price.toString(),
+          total: (item.quantity * item.unit_price).toString()
         }).returning().then(result => result[0])
       )
     );
