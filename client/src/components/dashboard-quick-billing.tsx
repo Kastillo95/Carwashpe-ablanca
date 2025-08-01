@@ -448,79 +448,188 @@ export function DashboardQuickBilling() {
           </DialogHeader>
           
           {lastInvoice && (
-            <div ref={printRef} className="space-y-6">
-              {/* Encabezado de la factura */}
-              <div className="invoice-header text-center border-b pb-4">
-                <h1 className="text-2xl font-bold text-gray-800">{BUSINESS_INFO.name}</h1>
-                <p className="text-gray-600">{BUSINESS_INFO.address}</p>
-                <p className="text-gray-600">{BUSINESS_INFO.addressDetail}</p>
-                <p className="text-gray-600">{BUSINESS_INFO.phone}</p>
-                <p className="text-sm text-gray-500">RTN: {BUSINESS_INFO.rtn}</p>
+            <div ref={printRef} className="bg-white p-6 space-y-6">
+              {/* Encabezado SAP-style con logo */}
+              <div className="invoice-header border-2 border-blue-600 p-4 bg-gradient-to-r from-blue-50 to-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    {/* Logo profesional de Carwash Peña Blanca */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg border-2 border-white">
+                      <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        {/* Carro */}
+                        <path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.22.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 15c-.83 0-1.5-.67-1.5-1.5S5.67 12 6.5 12s1.5.67 1.5 1.5S7.33 15 6.5 15zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 10l1.5-4.5h11L19 10H5z"/>
+                        {/* Gotas de agua */}
+                        <circle cx="8" cy="3" r="1" className="animate-pulse"/>
+                        <circle cx="12" cy="2" r="1.2" className="animate-pulse"/>
+                        <circle cx="16" cy="3" r="1" className="animate-pulse"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold text-blue-800">{BUSINESS_INFO.name}</h1>
+                      <p className="text-blue-600 text-lg font-medium">Sistema de Gestión Integral</p>
+                      <p className="text-blue-500 text-sm">Lavado Profesional • Detallado Premium</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-3 rounded-lg shadow-lg border border-blue-700">
+                      <p className="text-2xl font-bold tracking-wide">FACTURA</p>
+                      <p className="text-lg font-mono bg-blue-500 bg-opacity-30 px-2 py-1 rounded mt-1">
+                        {lastInvoice.number}
+                      </p>
+                      <p className="text-xs mt-1 opacity-90">
+                        {new Date().toLocaleDateString('es-HN')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Información de la empresa en estilo SAP */}
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>Dirección:</strong> {BUSINESS_INFO.address}</p>
+                    <p><strong>Detalle:</strong> {BUSINESS_INFO.addressDetail}</p>
+                    <p><strong>Teléfono:</strong> {BUSINESS_INFO.phone}</p>
+                  </div>
+                  <div>
+                    <p><strong>RTN:</strong> {BUSINESS_INFO.rtn}</p>
+                    <p><strong>Horarios:</strong> {BUSINESS_INFO.hours.weekdays}</p>
+                    <p><strong>Domingos:</strong> {BUSINESS_INFO.hours.sunday}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Información de la factura */}
-              <div className="invoice-details grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Información del Cliente</h3>
-                  <p><strong>Nombre:</strong> {lastInvoice.customer?.name}</p>
-                  {lastInvoice.customer?.phone && <p><strong>Teléfono:</strong> {lastInvoice.customer.phone}</p>}
-                  {lastInvoice.customer?.email && <p><strong>Email:</strong> {lastInvoice.customer.email}</p>}
-                  {lastInvoice.customer?.address && <p><strong>Dirección:</strong> {lastInvoice.customer.address}</p>}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Información de la Factura</h3>
-                  <p><strong>Número:</strong> {lastInvoice.invoice_number}</p>
-                  <p><strong>Fecha:</strong> {new Date(lastInvoice.date).toLocaleDateString('es-HN')}</p>
-                  <p><strong>Método de Pago:</strong> {lastInvoice.payment_method}</p>
-                  <p><strong>Estado:</strong> {lastInvoice.status}</p>
+              {/* Información SAP-style en formato estructurado */}
+              <div className="invoice-details bg-gray-50 p-4 border border-gray-200">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-white p-4 border border-blue-200 rounded">
+                    <h3 className="font-bold text-blue-800 mb-3 border-b border-blue-200 pb-2">
+                      DATOS DEL CLIENTE
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="grid grid-cols-3 gap-2">
+                        <span className="font-semibold text-gray-600">Nombre:</span>
+                        <span className="col-span-2">{lastInvoice.customer?.name}</span>
+                      </div>
+                      {lastInvoice.customer?.phone && (
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="font-semibold text-gray-600">Teléfono:</span>
+                          <span className="col-span-2">{lastInvoice.customer.phone}</span>
+                        </div>
+                      )}
+                      {lastInvoice.customer?.email && (
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="font-semibold text-gray-600">Email:</span>
+                          <span className="col-span-2">{lastInvoice.customer.email}</span>
+                        </div>
+                      )}
+                      {lastInvoice.customer?.address && (
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="font-semibold text-gray-600">Dirección:</span>
+                          <span className="col-span-2">{lastInvoice.customer.address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 border border-blue-200 rounded">
+                    <h3 className="font-bold text-blue-800 mb-3 border-b border-blue-200 pb-2">
+                      DATOS DE LA FACTURA
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="grid grid-cols-3 gap-2">
+                        <span className="font-semibold text-gray-600">Número:</span>
+                        <span className="col-span-2 font-mono">{lastInvoice.number}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <span className="font-semibold text-gray-600">Fecha:</span>
+                        <span className="col-span-2">{new Date(lastInvoice.date).toLocaleDateString('es-HN')}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <span className="font-semibold text-gray-600">M. Pago:</span>
+                        <span className="col-span-2 capitalize">{lastInvoice.payment_method}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <span className="font-semibold text-gray-600">Estado:</span>
+                        <span className="col-span-2">
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                            {lastInvoice.status}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Tabla de items */}
-              <div>
-                <table className="invoice-table w-full border-collapse border border-gray-300">
+              {/* Tabla SAP-style con mejor diseño */}
+              <div className="bg-white border border-blue-200 rounded">
+                <div className="bg-blue-600 text-white p-3 rounded-t">
+                  <h3 className="font-bold text-lg">DETALLE DE SERVICIOS Y PRODUCTOS</h3>
+                </div>
+                <table className="invoice-table w-full border-collapse">
                   <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 p-2 text-left">Descripción</th>
-                      <th className="border border-gray-300 p-2 text-center">Cantidad</th>
-                      <th className="border border-gray-300 p-2 text-right">Precio Unit.</th>
-                      <th className="border border-gray-300 p-2 text-right">Total</th>
+                    <tr className="bg-blue-50">
+                      <th className="border border-blue-200 p-3 text-left font-semibold text-blue-800">Código</th>
+                      <th className="border border-blue-200 p-3 text-left font-semibold text-blue-800">Descripción</th>
+                      <th className="border border-blue-200 p-3 text-center font-semibold text-blue-800">Cant.</th>
+                      <th className="border border-blue-200 p-3 text-right font-semibold text-blue-800">Precio Unit.</th>
+                      <th className="border border-blue-200 p-3 text-right font-semibold text-blue-800">Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lastInvoice.items?.map((item: any, index: number) => (
-                      <tr key={index}>
-                        <td className="border border-gray-300 p-2">
-                          {item.name}
-                          <br />
-                          <small className="text-gray-500">
-                            {item.type === 'service' ? 'Servicio' : 'Producto'}
-                          </small>
+                      <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="border border-blue-200 p-3 text-center font-mono text-sm">
+                          {String(index + 1).padStart(3, '0')}
                         </td>
-                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.unit_price)}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.total_price)}</td>
+                        <td className="border border-blue-200 p-3">
+                          <div>
+                            <span className="font-semibold">{item.serviceName}</span>
+                            <br />
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {item.type === 'service' ? 'SERVICIO' : 'PRODUCTO'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="border border-blue-200 p-3 text-center font-semibold">{item.quantity}</td>
+                        <td className="border border-blue-200 p-3 text-right font-mono">{formatCurrency(item.unitPrice)}</td>
+                        <td className="border border-blue-200 p-3 text-right font-mono font-semibold text-green-700">
+                          {formatCurrency(item.total)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Totales */}
+              {/* Totales SAP-style */}
               <div className="invoice-total">
                 <div className="flex justify-end">
-                  <div className="w-64 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>{formatCurrency(lastInvoice.subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>ISV (15%):</span>
-                      <span>{formatCurrency(lastInvoice.tax)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
-                      <span>Total:</span>
-                      <span>{formatCurrency(lastInvoice.total)}</span>
+                  <div className="w-80 bg-blue-50 border border-blue-200 rounded p-4">
+                    <h4 className="font-bold text-blue-800 mb-3 border-b border-blue-200 pb-2">
+                      RESUMEN FINANCIERO
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Subtotal (Base imponible):</span>
+                        <span className="font-mono bg-white px-3 py-1 rounded border">
+                          {formatCurrency(lastInvoice.subtotal)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">ISV (15% incluido):</span>
+                        <span className="font-mono bg-white px-3 py-1 rounded border">
+                          {formatCurrency(lastInvoice.tax)}
+                        </span>
+                      </div>
+                      <div className="border-t border-blue-300 pt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-blue-800">TOTAL A PAGAR:</span>
+                          <span className="text-xl font-bold font-mono bg-green-100 text-green-800 px-4 py-2 rounded border-2 border-green-300">
+                            {formatCurrency(lastInvoice.total)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -534,11 +643,28 @@ export function DashboardQuickBilling() {
                 </div>
               )}
 
-              {/* Footer */}
-              <div className="text-center text-sm text-gray-500 border-t pt-4">
-                <p>¡Gracias por su preferencia!</p>
-                <p>{BUSINESS_INFO.hours.weekdays}</p>
-                <p>{BUSINESS_INFO.hours.sunday}</p>
+              {/* Footer SAP-style */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded">
+                <div className="text-center">
+                  <h4 className="text-lg font-bold mb-2">¡GRACIAS POR SU PREFERENCIA!</h4>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="font-semibold">Horarios de Atención</p>
+                      <p>{BUSINESS_INFO.hours.weekdays}</p>
+                      <p>{BUSINESS_INFO.hours.sunday}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Contacto</p>
+                      <p>📞 {BUSINESS_INFO.phone}</p>
+                      <p>📍 {BUSINESS_INFO.address}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Sistema Integrado</p>
+                      <p>Factura generada automáticamente</p>
+                      <p>Documento válido para efectos fiscales</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
